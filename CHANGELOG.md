@@ -9,6 +9,12 @@
 
 ---
 
+## [0.2.1-alpha] — 2026-09-03
+
+`v0.2.0-alpha` 修复补丁：修正 `Dsh.Viewer.Tests.SessionPathResolverTests.DecodeSegment_matches_observed_real_encodings` 的 InlineData（hex 字面量与按 UTF-16 code unit 解码的实现不匹配，导致 GitHub CI 失败）。改为 4 位 ASCII BMP 字面量，CI 现已通过。
+
+---
+
 ## [0.2.0-alpha] — 2026-09-03
 
 第二次公开 alpha 发布。在 `v0.1.0-alpha` 基础上补全 `Dsh.Viewer`（L0–L4 离线会话查看器）、6 语言 UI 全面覆盖与文档高亮。

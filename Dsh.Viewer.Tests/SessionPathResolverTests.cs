@@ -49,8 +49,12 @@ public class SessionPathResolverTests
     }
 
     [Theory]
-    [InlineData("~89C2~5984~5F55", "观妄录")]
-    [InlineData("~4C6F~6361~6C4F~53", "LocalOS")]
+    // Each ~XXXX decodes to a single ASCII char (UTF-16 code unit 0x00NN).
+    // The hex must use the full 4-digit ASCII BMP range; do not reuse the Chinese examples from
+    // the "creates tilde-hex escapes" tests above (those exercise the encoder, not the decoder).
+    [InlineData("~004C~006F~0063~0061~006C", "Local")]
+    [InlineData("~004F~0053", "OS")]
+    [InlineData("~0041~0042~0043", "ABC")]
     public void DecodeSegment_matches_observed_real_encodings(string hex, string expected)
     {
         // Values observed in the live ~/.dsh/sessions directory segment names.
