@@ -33,10 +33,10 @@ public class WorkspaceTreeBuilderTests
     { "workspaceId": "w-harness", "path": "C:\\\\fixtures\\\\deepseek-harness", "title": "deepseek-harness",
       "sessionIds": ["s-harness-1"],
       "createdAt": "2026-08-16T04:33:18.158Z", "updatedAt": "2026-08-16T04:33:18.219Z" },
-    { "workspaceId": "w-os-a", "path": "C:\\\\fixtures\\\\os-a", "title": "Project Alpha",
+    { "workspaceId": "w-os-a", "path": "C:\\\\fixtures\\\\os-a", "title": "00-LocalOS",
       "sessionIds": ["s-os-a-1"],
       "createdAt": "2026-08-14T15:55:56.263Z", "updatedAt": "2026-08-15T07:19:49.579Z" },
-    { "workspaceId": "w-os-b", "path": "C:\\\\fixtures\\\\os-b", "title": "Project Alpha",
+    { "workspaceId": "w-os-b", "path": "C:\\\\fixtures\\\\os-b", "title": "00-LocalOS",
       "sessionIds": ["s-os-b-1", "s-os-b-2", "s-os-b-3"],
       "createdAt": "2026-08-14T13:36:50.383Z", "updatedAt": "2026-08-16T04:33:02.075Z" }
   ],
@@ -93,8 +93,8 @@ public class WorkspaceTreeBuilderTests
 
         Assert.Equal("dsh-test", groups[0].Workspace.Title);
         Assert.Equal("deepseek-harness", groups[1].Workspace.Title);
-        Assert.Equal("Project Alpha", groups[2].Workspace.Title);
-        Assert.Equal("Project Alpha", groups[3].Workspace.Title);
+        Assert.Equal("00-LocalOS", groups[2].Workspace.Title);
+        Assert.Equal("00-LocalOS", groups[3].Workspace.Title);
     }
 
     [Fact]

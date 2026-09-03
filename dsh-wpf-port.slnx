@@ -6,4 +6,5 @@
   <Project Path="Dsh.Contract/Dsh.Contract.csproj" />
   <Project Path="Dsh.Wpf/Dsh.Wpf.csproj" />
   <Project Path="Dsh.Viewer/Dsh.Viewer.csproj" />
+  <Project Path="Dsh.Viewer.Tests/Dsh.Viewer.Tests.csproj" />
 </Solution>

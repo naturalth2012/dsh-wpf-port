@@ -2,11 +2,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dsh.App\Dsh.App.csproj" />
-    <ProjectReference Include="..\Dsh.Contract\Dsh.Contract.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="ZstdNet" Version="1.5.7" />
   </ItemGroup>
 
@@ -18,6 +16,13 @@
     <UseWPF>true</UseWPF>
     <RootNamespace>Dsh.Viewer</RootNamespace>
     <AssemblyName>Dsh.Viewer</AssemblyName>
+    <!-- Application icon: multi-resolution .ico compiled into the .exe (Explorer + taskbar). -->
+    <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <!-- The window/taskbar PNG icon as a WPF resource (available via pack URI). -->
+  <ItemGroup>
+    <Resource Include="Assets\app-icon.png" />
+  </ItemGroup>
 
 </Project>

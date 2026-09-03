@@ -388,4 +388,49 @@
   <data name="Msg.ReasoningNote" xml:space="preserve"><value>모델의 내부 사고 초안이며 최종 응답의 일부가 아닙니다.</value></data>
   <data name="Html.CopyPageText" xml:space="preserve"><value>페이지 텍스트 복사</value></data>
   <data name="Html.RevealInFolder" xml:space="preserve"><value>폴더에서 표시</value></data>
+  <data name="Viewer.Title" xml:space="preserve"><value>DeepSeek Harness — 세션 아카이브 뷰어</value></data>
+  <data name="Viewer.Toolbar.Session" xml:space="preserve"><value>세션: </value></data>
+  <data name="Viewer.Toolbar.RowsUnit" xml:space="preserve"><value>{0}줄</value></data>
+  <data name="Viewer.Role.User" xml:space="preserve"><value>사용자</value></data>
+  <data name="Viewer.Role.Assistant" xml:space="preserve"><value>Assistant</value></data>
+  <data name="Viewer.Role.Tool" xml:space="preserve"><value>도구</value></data>
+  <data name="Viewer.Role.Error" xml:space="preserve"><value>오류</value></data>
+  <data name="Viewer.Role.Turn" xml:space="preserve"><value>차례</value></data>
+  <data name="Viewer.Reasoning" xml:space="preserve"><value>추론 과정</value></data>
+  <data name="Viewer.Tool.Args" xml:space="preserve"><value>인수</value></data>
+  <data name="Viewer.Tool.Result" xml:space="preserve"><value>결과</value></data>
+  <data name="Viewer.Tool.ResultError" xml:space="preserve"><value>결과 (오류)</value></data>
+  <data name="Viewer.SearchTooltip" xml:space="preserve"><value>세션 내 검색: 텍스트 / 도구 이름 / 역할</value></data>
+  <data name="Viewer.MatchUnit" xml:space="preserve"><value>일치 {0}개</value></data>
+  <data name="Viewer.Export" xml:space="preserve"><value>내보내기 ▾</value></data>
+  <data name="Viewer.ExportMarkdown" xml:space="preserve"><value>Markdown 기록…</value></data>
+  <data name="Viewer.ExportJsonl" xml:space="preserve"><value>원본 JSONL…</value></data>
+  <data name="Viewer.Raw" xml:space="preserve"><value>원시 세부정보</value></data>
+  <data name="Viewer.StatsMsgs" xml:space="preserve"><value>메시지</value></data>
+  <data name="Viewer.StatsTools" xml:space="preserve"><value>도구 호출</value></data>
+  <data name="Viewer.StatsErrors" xml:space="preserve"><value>오류</value></data>
+  <data name="Viewer.StatsTurns" xml:space="preserve"><value>차례</value></data>
+  <data name="Viewer.DecodeSkip" xml:space="preserve"><value>⚠ 이벤트 디코딩 실패, 건너뜀</value></data>
+  <data name="Viewer.ReadFail" xml:space="preserve"><value>⚠ 세션을 읽지 못했습니다: {0}</value></data>
+  <data name="Viewer.Language" xml:space="preserve"><value>언어</value></data>
+  <data name="Viewer.Tokens" xml:space="preserve"><value>tok</value></data>
+  <data name="Viewer.Duration" xml:space="preserve"><value>기간</value></data>
+  <data name="Viewer.TokenIn" xml:space="preserve"><value>입력</value></data>
+  <data name="Viewer.TokenOut" xml:space="preserve"><value>출력</value></data>
+  <data name="Viewer.ExportTranscriptTitle" xml:space="preserve"><value># 세션 아카이브 · {0}</value></data>
+  <data name="Viewer.ExportUntitled" xml:space="preserve"><value>(제목 없음)</value></data>
+  <data name="Viewer.ExportSection.User" xml:space="preserve"><value>## 🧑 사용자</value></data>
+  <data name="Viewer.ExportSection.Assistant" xml:space="preserve"><value>## 🤖 Assistant</value></data>
+  <data name="Viewer.ExportSection.Error" xml:space="preserve"><value>## ⚠️ 오류</value></data>
+  <data name="Viewer.ExportSection.Tool" xml:space="preserve"><value>## 🔧 {0}  [{1}]</value></data>
+  <data name="Viewer.ExportReasoningSummary" xml:space="preserve"><value>추론 과정</value></data>
+  <data name="Viewer.ExportToolResultSummary" xml:space="preserve"><value>결과</value></data>
+  <data name="Viewer.PickSessionDir" xml:space="preserve"><value>세션 저장 폴더 선택</value></data>
+  <data name="Viewer.ExportNoSession" xml:space="preserve"><value>먼저 세션을 열고 선택하세요.</value></data>
+  <data name="Viewer.ExportMarkdownTitle" xml:space="preserve"><value>Markdown으로 내보내기</value></data>
+  <data name="Viewer.ExportDone" xml:space="preserve"><value>내보냈습니다.</value></data>
+  <data name="Viewer.ExportFailed" xml:space="preserve"><value>내보내기 실패: {0}</value></data>
+  <data name="Viewer.ExportJsonlTitle" xml:space="preserve"><value>원본 JSONL 내보내기</value></data>
+  <data name="Viewer.ExportJsonlDone" xml:space="preserve"><value>원본 JSONL을 내보냈습니다.</value></data>
+  <data name="Viewer.Truncated" xml:space="preserve"><value>…(잘림)</value></data>
 </root>

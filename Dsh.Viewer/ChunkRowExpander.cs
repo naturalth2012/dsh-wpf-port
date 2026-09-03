@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text.Json;
 
 namespace Dsh.Viewer;
@@ -35,7 +36,7 @@ public static class ChunkRowExpander
 
     private static JsonElement[] Expand(string tag, JsonElement row)
     {
-        // seq0 / time0 anchor the first member.
+        // seq0 / time0 anchor the first member (absent fields default to 0, matching upstream).
         long seq0 = row.TryGetProperty("seq0", out var s0) && s0.ValueKind == JsonValueKind.Number
             ? s0.GetInt64() : 0;
         long time0 = row.TryGetProperty("time0", out var t0) && t0.ValueKind == JsonValueKind.Number
@@ -63,27 +64,66 @@ public static class ChunkRowExpander
                 var dk = dtArr[k - 1];
                 time += dk.ValueKind == JsonValueKind.Number ? dk.GetInt64() : 0;
             }
-
-            object chunk = tag == "tool-call-chunks"
-                ? (hasName
-                    ? (object)new { type = "tool-call-delta", index, id, name, argumentsDelta = Str(members[k]) }
-                    : new { type = "tool-call-delta", index, id, argumentsDelta = Str(members[k]) })
-                : new { type = ChunkType(tag), index, text = Str(members[k]) };
-
-            var ev = new
-            {
-                type = "assistant/chunk",
-                seq = seq0 + k,
-                time,
-                data = new { turn, step, chunk },
-            };
-            results[k] = JsonSerializer.SerializeToElement(ev);
+            results[k] = SerializeChunk(tag, seq0 + k, time, turn, step, index, id, name, hasName, members[k]);
         }
         return results;
     }
 
-    private static object? Str(JsonElement el) =>
-        el.ValueKind == JsonValueKind.String ? el.GetString() : null;
+    /// <summary>
+    /// Serialize one expanded <c>assistant/chunk</c> event, writing only the optional fields that
+    /// are actually present. A <c>default</c> <see cref="JsonElement"/> (absent property) cannot be
+    /// serialized, so the previous anonymous-object approach threw <c>InvalidOperationException</c>
+    /// on chunk rows that omit optional members — this builder is resilient to that.
+    /// </summary>
+    private static JsonElement SerializeChunk(string tag, long seq, long time, JsonElement turn,
+        JsonElement step, JsonElement index, string id, string name, bool hasName, JsonElement member)
+    {
+        using var ms = new MemoryStream();
+        using (var w = new Utf8JsonWriter(ms))
+        {
+            w.WriteStartObject();                 // assistant/chunk
+            w.WriteString("type", "assistant/chunk");
+            w.WriteNumber("seq", seq);
+            w.WriteNumber("time", time);
+            w.WritePropertyName("data");
+            w.WriteStartObject();                 // data
+            WriteIfPresent(w, "turn", turn);
+            WriteIfPresent(w, "step", step);
+            w.WritePropertyName("chunk");
+            w.WriteStartObject();                 // chunk
+            w.WriteString("type", ChunkType(tag));
+            WriteIfPresent(w, "index", index);
+            if (tag == "tool-call-chunks")
+            {
+                if (id.Length != 0) w.WriteString("id", id);
+                if (hasName && name.Length != 0) w.WriteString("name", name);
+                WriteStringOrNull(w, "argumentsDelta", member);
+            }
+            else
+            {
+                WriteStringOrNull(w, "text", member);
+            }
+            w.WriteEndObject();                   // /chunk
+            w.WriteEndObject();                   // /data
+            w.WriteEndObject();                   // /assistant/chunk
+        }
+        return JsonSerializer.Deserialize<JsonElement>(ms.ToArray());
+    }
+
+    /// <summary>Write a property only when its source <see cref="JsonElement"/> is non-default.</summary>
+    private static void WriteIfPresent(Utf8JsonWriter w, string name, JsonElement el)
+    {
+        if (el.ValueKind == JsonValueKind.Undefined) return;
+        w.WritePropertyName(name);
+        el.WriteTo(w);
+    }
+
+    private static void WriteStringOrNull(Utf8JsonWriter w, string name, JsonElement el)
+    {
+        w.WritePropertyName(name);
+        if (el.ValueKind == JsonValueKind.String) w.WriteStringValue(el.GetString());
+        else w.WriteNullValue();
+    }
 
     private static string ChunkType(string tag) => tag switch
     {

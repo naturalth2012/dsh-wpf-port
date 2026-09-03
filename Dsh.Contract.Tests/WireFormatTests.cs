@@ -41,7 +41,7 @@ public class WireFormatTests
         "\"items\":[" +
         "{\"sessionId\":\"session-dc58e495-d639-4a7b-9762-7afa0fd58040\"," +
         "\"updatedAt\":1786778389567,\"running\":false,\"blank\":true," +
-        "\"cwd\":\"C:\\\\fixtures\\\\legacy-archive\",\"agentPreset\":\"standard\"," +
+        "\"cwd\":\"C:\\\\fixtures\\\\eastern-wisdom-archive\",\"agentPreset\":\"standard\"," +
         "\"projections\":{\"asOfSeq\":6,\"values\":{\"title\":null}}},{" +
         "\"sessionId\":\"session-f889d7d0-660b-41bd-ab80-48b0ee41a8c0\"," +
         "\"updatedAt\":1786778336515,\"running\":false,\"blank\":true," +

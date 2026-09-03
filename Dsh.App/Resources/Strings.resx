@@ -434,4 +434,49 @@
   <data name="Msg.ReasoningNote" xml:space="preserve"><value>以下为模型的内部思考草稿，非最终回复内容。</value></data>
   <data name="Html.CopyPageText" xml:space="preserve"><value>复制页面文本</value></data>
   <data name="Html.RevealInFolder" xml:space="preserve"><value>打开所在文件夹</value></data>
+  <data name="Viewer.Title" xml:space="preserve"><value>DeepSeek Harness — 会话档案查看器</value></data>
+  <data name="Viewer.Toolbar.Session" xml:space="preserve"><value>会话：</value></data>
+  <data name="Viewer.Toolbar.RowsUnit" xml:space="preserve"><value>{0} 行</value></data>
+  <data name="Viewer.Role.User" xml:space="preserve"><value>用户</value></data>
+  <data name="Viewer.Role.Assistant" xml:space="preserve"><value>Assistant</value></data>
+  <data name="Viewer.Role.Tool" xml:space="preserve"><value>工具</value></data>
+  <data name="Viewer.Role.Error" xml:space="preserve"><value>错误</value></data>
+  <data name="Viewer.Role.Turn" xml:space="preserve"><value>轮次</value></data>
+  <data name="Viewer.Reasoning" xml:space="preserve"><value>思考过程（推理）</value></data>
+  <data name="Viewer.Tool.Args" xml:space="preserve"><value>参数</value></data>
+  <data name="Viewer.Tool.Result" xml:space="preserve"><value>结果</value></data>
+  <data name="Viewer.Tool.ResultError" xml:space="preserve"><value>结果（错误）</value></data>
+  <data name="Viewer.SearchTooltip" xml:space="preserve"><value>会话内搜索：文本/工具名/角色</value></data>
+  <data name="Viewer.MatchUnit" xml:space="preserve"><value>{0} 匹配</value></data>
+  <data name="Viewer.Export" xml:space="preserve"><value>导出 ▾</value></data>
+  <data name="Viewer.ExportMarkdown" xml:space="preserve"><value>Markdown 转录…</value></data>
+  <data name="Viewer.ExportJsonl" xml:space="preserve"><value>原始 JSONL…</value></data>
+  <data name="Viewer.Raw" xml:space="preserve"><value>原始详情 (Raw)</value></data>
+  <data name="Viewer.StatsMsgs" xml:space="preserve"><value>消息</value></data>
+  <data name="Viewer.StatsTools" xml:space="preserve"><value>工具调用</value></data>
+  <data name="Viewer.StatsErrors" xml:space="preserve"><value>错误</value></data>
+  <data name="Viewer.StatsTurns" xml:space="preserve"><value>轮次</value></data>
+  <data name="Viewer.DecodeSkip" xml:space="preserve"><value>⚠ 事件解码失败，已跳过</value></data>
+  <data name="Viewer.ReadFail" xml:space="preserve"><value>⚠ 会话读取失败：{0}</value></data>
+  <data name="Viewer.Language" xml:space="preserve"><value>语言</value></data>
+  <data name="Viewer.Tokens" xml:space="preserve"><value>tok</value></data>
+  <data name="Viewer.Duration" xml:space="preserve"><value>时长</value></data>
+  <data name="Viewer.TokenIn" xml:space="preserve"><value>输入</value></data>
+  <data name="Viewer.TokenOut" xml:space="preserve"><value>输出</value></data>
+  <data name="Viewer.ExportTranscriptTitle" xml:space="preserve"><value># 会话档案 · {0}</value></data>
+  <data name="Viewer.ExportUntitled" xml:space="preserve"><value>(未命名)</value></data>
+  <data name="Viewer.ExportSection.User" xml:space="preserve"><value>## 🧑 用户</value></data>
+  <data name="Viewer.ExportSection.Assistant" xml:space="preserve"><value>## 🤖 Assistant</value></data>
+  <data name="Viewer.ExportSection.Error" xml:space="preserve"><value>## ⚠️ 错误</value></data>
+  <data name="Viewer.ExportSection.Tool" xml:space="preserve"><value>## 🔧 {0}  [{1}]</value></data>
+  <data name="Viewer.ExportReasoningSummary" xml:space="preserve"><value>推理过程</value></data>
+  <data name="Viewer.ExportToolResultSummary" xml:space="preserve"><value>结果</value></data>
+  <data name="Viewer.PickSessionDir" xml:space="preserve"><value>选择会话存储目录</value></data>
+  <data name="Viewer.ExportNoSession" xml:space="preserve"><value>请先打开并选择一个会话。</value></data>
+  <data name="Viewer.ExportMarkdownTitle" xml:space="preserve"><value>导出为 Markdown</value></data>
+  <data name="Viewer.ExportDone" xml:space="preserve"><value>已导出。</value></data>
+  <data name="Viewer.ExportFailed" xml:space="preserve"><value>导出失败：{0}</value></data>
+  <data name="Viewer.ExportJsonlTitle" xml:space="preserve"><value>导出原始 JSONL</value></data>
+  <data name="Viewer.ExportJsonlDone" xml:space="preserve"><value>已导出原始 JSONL。</value></data>
+  <data name="Viewer.Truncated" xml:space="preserve"><value>…(截断)</value></data>
 </root>

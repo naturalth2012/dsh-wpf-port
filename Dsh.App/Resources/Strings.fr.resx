@@ -388,4 +388,49 @@
   <data name="Msg.ReasoningNote" xml:space="preserve"><value>Brouillon de réflexion interne du modèle — ne fait pas partie de la réponse finale.</value></data>
   <data name="Html.CopyPageText" xml:space="preserve"><value>Copier le texte de la page</value></data>
   <data name="Html.RevealInFolder" xml:space="preserve"><value>Afficher dans le dossier</value></data>
+  <data name="Viewer.Title" xml:space="preserve"><value>DeepSeek Harness — Visionneuse d'archives de sessions</value></data>
+  <data name="Viewer.Toolbar.Session" xml:space="preserve"><value>Session : </value></data>
+  <data name="Viewer.Toolbar.RowsUnit" xml:space="preserve"><value>{0} lignes</value></data>
+  <data name="Viewer.Role.User" xml:space="preserve"><value>Utilisateur</value></data>
+  <data name="Viewer.Role.Assistant" xml:space="preserve"><value>Assistant</value></data>
+  <data name="Viewer.Role.Tool" xml:space="preserve"><value>Outil</value></data>
+  <data name="Viewer.Role.Error" xml:space="preserve"><value>Erreur</value></data>
+  <data name="Viewer.Role.Turn" xml:space="preserve"><value>Tour</value></data>
+  <data name="Viewer.Reasoning" xml:space="preserve"><value>Raisonnement</value></data>
+  <data name="Viewer.Tool.Args" xml:space="preserve"><value>Arguments</value></data>
+  <data name="Viewer.Tool.Result" xml:space="preserve"><value>Résultat</value></data>
+  <data name="Viewer.Tool.ResultError" xml:space="preserve"><value>Résultat (erreur)</value></data>
+  <data name="Viewer.SearchTooltip" xml:space="preserve"><value>Rechercher dans la session : texte / nom d'outil / rôle</value></data>
+  <data name="Viewer.MatchUnit" xml:space="preserve"><value>{0} résultat</value></data>
+  <data name="Viewer.Export" xml:space="preserve"><value>Exporter ▾</value></data>
+  <data name="Viewer.ExportMarkdown" xml:space="preserve"><value>Transcription Markdown…</value></data>
+  <data name="Viewer.ExportJsonl" xml:space="preserve"><value>JSONL brut…</value></data>
+  <data name="Viewer.Raw" xml:space="preserve"><value>Détails bruts</value></data>
+  <data name="Viewer.StatsMsgs" xml:space="preserve"><value>messages</value></data>
+  <data name="Viewer.StatsTools" xml:space="preserve"><value>appels d'outil</value></data>
+  <data name="Viewer.StatsErrors" xml:space="preserve"><value>erreurs</value></data>
+  <data name="Viewer.StatsTurns" xml:space="preserve"><value>tours</value></data>
+  <data name="Viewer.DecodeSkip" xml:space="preserve"><value>⚠ échec du décodage d'un événement, ignoré</value></data>
+  <data name="Viewer.ReadFail" xml:space="preserve"><value>⚠ lecture de la session impossible : {0}</value></data>
+  <data name="Viewer.Language" xml:space="preserve"><value>Langue</value></data>
+  <data name="Viewer.Tokens" xml:space="preserve"><value>tok</value></data>
+  <data name="Viewer.Duration" xml:space="preserve"><value>durée</value></data>
+  <data name="Viewer.TokenIn" xml:space="preserve"><value>entrée</value></data>
+  <data name="Viewer.TokenOut" xml:space="preserve"><value>sortie</value></data>
+  <data name="Viewer.ExportTranscriptTitle" xml:space="preserve"><value># Archive de session · {0}</value></data>
+  <data name="Viewer.ExportUntitled" xml:space="preserve"><value>(sans titre)</value></data>
+  <data name="Viewer.ExportSection.User" xml:space="preserve"><value>## 🧑 Utilisateur</value></data>
+  <data name="Viewer.ExportSection.Assistant" xml:space="preserve"><value>## 🤖 Assistant</value></data>
+  <data name="Viewer.ExportSection.Error" xml:space="preserve"><value>## ⚠️ Erreur</value></data>
+  <data name="Viewer.ExportSection.Tool" xml:space="preserve"><value>## 🔧 {0}  [{1}]</value></data>
+  <data name="Viewer.ExportReasoningSummary" xml:space="preserve"><value>Raisonnement</value></data>
+  <data name="Viewer.ExportToolResultSummary" xml:space="preserve"><value>Résultat</value></data>
+  <data name="Viewer.PickSessionDir" xml:space="preserve"><value>Choisir le dossier de stockage des sessions</value></data>
+  <data name="Viewer.ExportNoSession" xml:space="preserve"><value>Veuillez d'abord ouvrir et sélectionner une session.</value></data>
+  <data name="Viewer.ExportMarkdownTitle" xml:space="preserve"><value>Exporter en Markdown</value></data>
+  <data name="Viewer.ExportDone" xml:space="preserve"><value>Exporté.</value></data>
+  <data name="Viewer.ExportFailed" xml:space="preserve"><value>Échec de l'export : {0}</value></data>
+  <data name="Viewer.ExportJsonlTitle" xml:space="preserve"><value>Exporter le JSONL brut</value></data>
+  <data name="Viewer.ExportJsonlDone" xml:space="preserve"><value>JSONL brut exporté.</value></data>
+  <data name="Viewer.Truncated" xml:space="preserve"><value>…(tronqué)</value></data>
 </root>

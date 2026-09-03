@@ -32,9 +32,10 @@ It is **not 100% equivalent**. Canvas timeline interaction, Todo/Queue dock writ
 - **Subagents** — directory tree with read-only / continue modes
 - **Background jobs** — job panel
 - **Visualization** — trajectory timeline, artifacts, feedback, copy
-- **Local storage viewer (`Dsh.Viewer`)** — browse local `.jsonl` session data offline (levels L0–L2)
+- **Local storage viewer (`Dsh.Viewer`)** — browse local `.jsonl`/`.zstd` session data offline (L0–L4: tree browse, rich Markdown/tool rendering, in-session search, stats, Markdown/JSONL export, 6-language UI)
 - **Windows-native** — multi-window, system tray, global hotkeys, always-on-top, narrow-window responsive layout, dark title bar, auto-scroll
 - **Offline replay** — read back cached session history when the gateway is unreachable
+- **Zero-config backend** — point the client at a `deepseek-harness` checkout (or set `DSH_HARNESS_DIR`) and it auto-installs dependencies, builds the web bundle, launches `pnpm dsh web`, and connects — no manual backend setup
 - **i18n** — 6 languages (English, 中文, 日本語, Deutsch, Français, Español)
 
 ### Requirements
@@ -57,6 +58,8 @@ dotnet test dsh-wpf-port.slnx       # test
 
 On first launch, pick your `deepseek-harness` directory in the **Service** panel. Alternatively set the `DSH_HARNESS_DIR` environment variable; the client also probes `~/deepseek-harness` and `~/dsh/deepseek-harness`.
 
+**Backend auto-setup.** The client needs a running `deepseek-harness` host. On first launch it detects a fresh checkout (missing `apps/web/dist`), runs `pnpm install` + `pnpm run build`, launches `pnpm dsh web` on `http://127.0.0.1:3080`, polls until the gateway answers, then auto-connects. You only choose the directory once.
+
 > **Note**: `dotnet run` does not hot-reload. Close the running `Dsh.Wpf.exe` before rebuilding, otherwise the build fails with MSB3027 (locked DLLs).
 
 ### Project structure
@@ -72,7 +75,7 @@ os/             Development process documentation (Chinese) — see os/README.md
 
 ### Tests
 
-**313 tests passing** (`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95).
+**367 tests passing** (`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 54).
 
 Contract tests are written against **real wire fixtures** rather than mocks, so upstream protocol changes are caught early.
 
@@ -82,7 +85,7 @@ Contract tests are written against **real wire fixtures** rather than mocks, so 
 |---|---|
 | Canvas timeline interaction (drag-focus / wheel-zoom) | Axis is drawn; interaction layer missing |
 | TodoDock / QueueDock write operations | Read-only (`session.updateQueue` contract exists, client not wired) |
-| Viewer: host-client integration (L2), enhanced rendering & search/export (L3–L4) | L0 done; L1 decoding done (tests pending) |
+| Viewer: host-client integration (L2), cross-session global search, HTML/CSV export | L0–L4 done + tested (tree browse, rich rendering, in-session search/stats, Markdown/JSONL export) |
 | Tray job/approval balloons | Not implemented |
 | Date/number localization, font & bidi layout | Not implemented |
 | Job kill, credential-change events | **Blocked by upstream** (missing RPC) |
@@ -136,9 +139,10 @@ WPF 客户端覆盖 Web 客户端的**绝大部分**面向用户功能，并在 
 - **子代理** —— 目录树，支持只读 / 续写模式
 - **后台作业** —— 作业面板
 - **可视化** —— 轨迹时间轴、产物、反馈、复制
-- **本地存储查看器（`Dsh.Viewer`）** —— 离线浏览本地 `.jsonl` 会话数据（L0–L1 已交付，L2 融合进行中）
+- **本地存储查看器（`Dsh.Viewer`）** —— 离线浏览本地 `.jsonl`/`.zstd` 会话数据（L0–L4 已交付并测试：树形浏览、富 Markdown/工具渲染、会话内检索、统计、Markdown/JSONL 导出、6 语言 UI）
 - **Windows 原生** —— 多窗口、系统托盘、全局热键、窗口置顶、窄屏响应式、深色标题栏、自动滚动
 - **离线回放** —— 网关不可达时回读缓存的会话历史
+- **零配置后端** —— 指定 `deepseek-harness` 检出目录（或设置 `DSH_HARNESS_DIR`），客户端自动安装依赖、构建 web bundle、启动 `pnpm dsh web` 并连接，无需手动搭建后端
 - **国际化** —— 6 种语言（英、中、日、德、法、西）
 
 ### 环境要求
@@ -161,6 +165,8 @@ dotnet test dsh-wpf-port.slnx       # 测试
 
 首次运行时在「服务」面板中选择 `deepseek-harness` 目录。也可设置 `DSH_HARNESS_DIR` 环境变量；客户端还会探测 `~/deepseek-harness` 与 `~/dsh/deepseek-harness`。
 
+**后端自动初始化。** 客户端需要一个运行中的 `deepseek-harness` 宿主。首次启动时会检测全新检出（缺少 `apps/web/dist`），自动执行 `pnpm install` + `pnpm run build`，在 `http://127.0.0.1:3080` 启动 `pnpm dsh web`，轮询直至网关响应后自动连接。你只需指定一次目录。
+
 > **注意**：`dotnet run` 不会热重载。重新构建前请先关闭正在运行的 `Dsh.Wpf.exe`，否则会因 DLL 被锁定而构建失败（MSB3027）。
 
 ### 项目结构
@@ -176,7 +182,7 @@ os/             开发过程文档（中文）—— 见 os/README.md
 
 ### 测试
 
-**313 个用例通过**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95）。
+**367 个用例通过**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 54）。
 
 契约测试基于**真实 wire fixture** 而非 mock，因此能及时捕获上游协议变更。
 
@@ -186,7 +192,7 @@ os/             开发过程文档（中文）—— 见 os/README.md
 |---|---|
 | Canvas 时间轴交互（拖拽聚焦 / 滚轮缩放） | 轴已自绘，缺交互层 |
 | TodoDock / QueueDock 写操作 | 只读（`session.updateQueue` 契约已就绪，客户端未接线） |
-| 查看器融合（L2）、增强渲染与检索导出（L3–L4） | L0 已完成；L1 解码已实现（待补测试） |
+| 查看器融合（L2）、跨会话全局检索、HTML/CSV 导出 | L0–L4 已完成并测试（树形浏览、富渲染、会话内检索/统计、Markdown/JSONL 导出） |
 | 托盘作业/审批 balloon | 未实现 |
 | 日期数字本地化、字体与 bidi 排版 | 未实现 |
 | 作业 kill、凭据变更事件 | **被上游阻塞**（缺失 RPC） |

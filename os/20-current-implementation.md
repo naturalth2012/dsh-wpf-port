@@ -62,6 +62,18 @@
 
 判定依据：`LooksLikeHarnessCheckout(dir)` —— 含 `pnpm-workspace.yaml` 即视为 harness 检出。
 
+### 4.1 自动初始化与启动流程
+
+选定目录后，`HarnessLauncher` 走「探测 → 初始化 → 启动 → 探活 → 连接」五步（实现见 `Dsh.App/Services/HarnessLauncher.cs` + `Dsh.Wpf/MainViewModel.Service.cs`）：
+
+1. **探测（`TryLocateDefaultDirectory`）**：见上。UI 在「服务」面板提供目录选择，选中后存入 `AppSettings.HarnessDirectory`。
+2. **初始化（`InitializeAsync`）**：若 `NeedsBuild`（缺少 `apps/web/dist`，且 `apps/web-dist` 回退也不存在），依次执行 `pnpm install` 与 `pnpm run build`。超时由 `InitTimeoutMinutes`（默认 15 分钟，`MainViewModel.cs:153`）控制 —— 首次构建可能很久。
+3. **启动（`Launch`）**：后台执行 `pnpm dsh web`，标准输出/错误经 `OnLog` 回传 UI（上限 `MaxHarnessLogLines` 500 行），失败信息写入 `InitFailedLog` 供排查。
+4. **探活（`WaitForReadyAsync`）**：轮询网关 `http://127.0.0.1:3080` 的 `host.describe`，直至返回成功或超时。
+5. **连接**：探活通过后由 `MainViewModel.Service.cs` 自动发起 WPF 客户端连接，无需用户再操作。
+
+**亮点**：用户只需指定一次目录，后续 install / build / start / connect 全自动，无需手动搭建后端。这是面向开源用户的核心卖点，也是 README「零配置后端」特性的技术依据。
+
 ## 5. 待决策项汇总
 
 | # | 项 | 当前值 | 建议值 | 影响 |
