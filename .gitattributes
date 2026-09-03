@@ -1,0 +1,36 @@
+# Normalize line endings on checkin: text files are stored with LF in the
+# repository and checked out with CRLF on Windows. This silences the
+# "LF will be replaced by CRLF" warnings and keeps diffs clean when
+# contributors use different platforms.
+* text=auto
+
+# Source files: LF in repo, native on checkout
+*.cs      text diff=csharp
+*.xaml    text
+*.csproj  text
+*.slnx    text
+*.json    text
+*.md      text
+*.yml     text
+*.yaml    text
+*.resx    text
+*.py      text
+*.toml    text
+*.config  text
+
+# Files that must keep CRLF (Windows-only tooling)
+*.sln     text eol=crlf
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+
+# Binary files — never normalize, never diff
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.dll     binary
+*.exe     binary
+*.pdb     binary
+*.snk     binary
+*.pdf     binary

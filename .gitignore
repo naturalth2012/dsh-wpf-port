@@ -1,0 +1,35 @@
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+*.nupkg
+TestResults/
+
+# Local command-output redirects (dotnet build/test > _b.txt/_o.txt)
+_b.txt
+_o.txt
+_o2.txt
+
+# Scratch space: one-off scripts / patches that are not part of the product
+# (e.g. the _fix_*.py source-rewriting helpers). Kept locally for reference only;
+# safe to delete at any time — nothing in the build depends on them.
+_tmp/
+
+# WPF MSBuild temporary wpftmp projects (can leak to the project root during XAML builds)
+*_wpftmp.csproj
+
+# Evidence (acceptance artifacts, see os/04-acceptance.md §3).
+# Local acceptance evidence (screenshots/recordings/logs and the index) stays
+# out of the public repo entirely; the conventions are documented in os/04.
+evidence/
+
+# OS / IDE
+.vs/
+.idea/
+.vscode/
+
+# IDE / AI-assistant working memory and session logs.
+# These are local tooling artifacts that can contain absolute paths and
+# in-progress discussion notes — they must never be committed.
+.workbuddy/

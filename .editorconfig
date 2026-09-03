@@ -1,0 +1,58 @@
+# EditorConfig — keeps formatting consistent across editors/IDEs.
+# See https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# C# / XAML / project files
+[*.{cs,xaml,csproj,props,targets}]
+indent_size = 4
+
+# XAML attributes are conventionally indented by 4 as well
+[*.xaml]
+indent_size = 4
+
+# JSON / YAML / TOML — 2 spaces
+[*.{json,yml,yaml,toml}]
+indent_size = 2
+
+# Markdown: keep trailing spaces meaningful? No — trim, except we allow
+# two-space line breaks by not trimming (common in lists). Keep trim off
+# to avoid noisy diffs in existing docs.
+[*.md]
+trim_trailing_whitespace = false
+
+# Generated files — do not enforce
+[*.{g.cs,g.i.cs,Designer.cs}]
+generated_code = true
+
+# C# analyzers / style
+[*.cs]
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# Braces on new lines (project already follows this)
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+
+# Prefer explicit types, var when apparent (matches existing code style)
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# Naming: private fields are _camelCase (matches existing code)
+dotnet_naming_rule.private_fields_underscore.severity = suggestion
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel_case
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix = _

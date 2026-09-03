@@ -1,0 +1,80 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ===== 背景体系（青黑） ===== -->
+    <SolidColorBrush x:Key="Background" Color="#0F1414"/>
+    <SolidColorBrush x:Key="Surface1" Color="#151A1A"/>
+    <SolidColorBrush x:Key="Surface2" Color="#1B2121"/>
+    <SolidColorBrush x:Key="Surface3" Color="#232B2B"/>
+    <SolidColorBrush x:Key="Border" Color="#2A3333"/>
+    <SolidColorBrush x:Key="Divider" Color="#263030"/>
+
+    <!-- ===== 文字层级 ===== -->
+    <SolidColorBrush x:Key="TextPrimary" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="TextMuted" Color="#64748B"/>
+    <SolidColorBrush x:Key="TextOnAccent" Color="#FFFFFF"/>
+
+    <!-- ===== 品牌色（提亮黛青） ===== -->
+    <SolidColorBrush x:Key="Accent" Color="#14B8A6"/>
+    <SolidColorBrush x:Key="AccentHover" Color="#2DD4BF"/>
+    <SolidColorBrush x:Key="AccentActive" Color="#5EEAD4"/>
+    <SolidColorBrush x:Key="AccentSoft" Color="#134E4A"/>
+    <SolidColorBrush x:Key="FocusRing" Color="#14B8A6"/>
+
+    <!-- ===== 语义色 ===== -->
+    <SolidColorBrush x:Key="Danger" Color="#F87171"/>
+    <SolidColorBrush x:Key="DangerSoft" Color="#2B1616"/>
+    <SolidColorBrush x:Key="Success" Color="#4ADE80"/>
+    <SolidColorBrush x:Key="Warning" Color="#FBBF24"/>
+    <SolidColorBrush x:Key="Info" Color="#60A5FA"/>
+    <SolidColorBrush x:Key="CodeBackground" Color="#0B0F0F"/>
+
+    <!-- ===== 语义背景令牌（区域/面板着色，H 主题重构 2026-08-21） ===== -->
+    <!-- Info: 信息/问题面板（深色下用低饱和青蓝，避免刺眼） -->
+    <SolidColorBrush x:Key="InfoBackground" Color="#13212B"/>
+    <SolidColorBrush x:Key="InfoBorder" Color="#1E3A4A"/>
+    <SolidColorBrush x:Key="InfoText" Color="#7DD3FC"/>
+    <!-- Warning: 审批面板/错误条（深色下用低饱和琥珀） -->
+    <SolidColorBrush x:Key="WarningBackground" Color="#2B2310"/>
+    <SolidColorBrush x:Key="WarningBorder" Color="#4A3A18"/>
+    <SolidColorBrush x:Key="WarningText" Color="#FCD34D"/>
+    <!-- Danger: 错误条背景（配合 Danger 文字） -->
+    <SolidColorBrush x:Key="DangerBackground" Color="#2B1616"/>
+    <!-- Highlight: 搜索命中高亮（深色下琥珀黄半透明感） -->
+    <SolidColorBrush x:Key="HighlightBackground" Color="#3A3414"/>
+    <!-- Card: 悬停卡片/内容卡片 -->
+    <SolidColorBrush x:Key="CardSurface" Color="#1B2121"/>
+    <SolidColorBrush x:Key="CardBorder" Color="#2A3333"/>
+    <SolidColorBrush x:Key="HoverCardBackground" Color="#232B2B"/>
+
+    <!-- ===== Markdown 渲染令牌（自绘重构 D4，深浅主题各自定义） ===== -->
+    <SolidColorBrush x:Key="MdTextPrimary" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="MdTextSecondary" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="MdTextMuted" Color="#64748B"/>
+    <SolidColorBrush x:Key="MdCodeBackground" Color="#0B0F0F"/>
+    <SolidColorBrush x:Key="MdCodeForeground" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="MdCodeHeaderBackground" Color="#161B1B"/>
+    <SolidColorBrush x:Key="MdCodeBorder" Color="#2A3333"/>
+    <SolidColorBrush x:Key="MdInlineCodeBackground" Color="#334155"/>
+    <SolidColorBrush x:Key="MdInlineCodeForeground" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="MdBorder" Color="#2A3333"/>
+    <SolidColorBrush x:Key="MdAccent" Color="#14B8A6"/>
+    <SolidColorBrush x:Key="MdLinkForeground" Color="#14B8A6"/>
+    <SolidColorBrush x:Key="MdQuoteBackground" Color="#232B2B"/>
+    <SolidColorBrush x:Key="MdTableHeaderBackground" Color="#232B2B"/>
+    <SolidColorBrush x:Key="MdError" Color="#F87171"/>
+    <SolidColorBrush x:Key="MdErrorBackground" Color="#2B1A1A"/>
+
+    <!-- ===== 旧令牌别名（兼容既有 XAML，U1 迁移完成后移除） ===== -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#0F1414"/>
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#151A1A"/>
+    <SolidColorBrush x:Key="PanelAltBackgroundBrush" Color="#1B2121"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#2A3333"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E2E8F0"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#94A3B8"/>
+    <SolidColorBrush x:Key="TextOnAccentBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#14B8A6"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#2DD4BF"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="#F87171"/>
+</ResourceDictionary>

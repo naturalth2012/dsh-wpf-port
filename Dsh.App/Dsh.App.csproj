@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dsh.Client\Dsh.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- M0：Markdown 解析引擎（纯解析、无 UI 依赖，兼容 net8.0） -->
+    <PackageReference Include="Markdig" Version="0.37.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

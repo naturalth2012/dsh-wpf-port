@@ -1,0 +1,13 @@
+﻿<Application x:Class="Dsh.Wpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Dsh.Wpf">
+    <Application.Resources>
+        <!-- U2：全局控件样式层（按钮三级/输入/滚动条/列表项），颜色引用主题令牌随深浅切换 -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Themes/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

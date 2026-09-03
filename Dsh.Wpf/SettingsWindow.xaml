@@ -1,0 +1,70 @@
+<Window x:Class="Dsh.Wpf.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="clr-namespace:Dsh.Wpf"
+        Title="{loc:Loc Key=Settings}" Height="520" Width="480"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        ShowInTaskbar="False" Owner="{x:Null}"
+        FontFamily="Microsoft YaHei UI, 微软雅黑, Segoe UI" FontSize="13"
+        TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType"
+        Background="{DynamicResource Surface1}">
+    <Window.Resources>
+        <Style TargetType="TextBlock" x:Key="GroupTitle">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,14,0,8"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="Label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+    </Window.Resources>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20,8,20,20" MaxWidth="400">
+            <!-- 连接 -->
+            <TextBlock Text="{loc:Loc Key=GroupConnection}" Style="{StaticResource GroupTitle}"/>
+            <TextBlock Text="{loc:Loc Key=HostLabel}" Style="{StaticResource Label}"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBox Text="{Binding HostUrl, UpdateSourceTrigger=PropertyChanged}" Width="280"/>
+                <Button Content="{loc:Loc Key=Connect}" Command="{Binding ConnectCommand}" Style="{StaticResource ButtonPrimary}" Width="88"/>
+            </StackPanel>
+            <TextBlock Text="{loc:Loc Key=CurrentStatus}" Style="{StaticResource Label}"/>
+            <TextBlock Text="{Binding ConnectionStatus}" FontSize="12" Foreground="{DynamicResource TextSecondary}"/>
+
+            <!-- 模型 -->
+            <TextBlock Text="{loc:Loc Key=GroupModel}" Style="{StaticResource GroupTitle}"/>
+            <TextBlock Text="{loc:Loc Key=ModelLabel}" Style="{StaticResource Label}"/>
+            <StackPanel Orientation="Horizontal">
+                <ComboBox ItemsSource="{Binding ModelChoices}"
+                          SelectedValue="{Binding SelectedModelId}"
+                          SelectedValuePath="Id" DisplayMemberPath="Label"
+                          Width="240" VerticalContentAlignment="Center"/>
+                <Button Content="{loc:Loc Key=SelectModel}" Command="{Binding SelectModelCommand}" Style="{StaticResource ButtonSecondary}" Margin="0,0,6,0"/>
+                <Button Content="{loc:Loc Key=LoadModels}" Command="{Binding LoadModelsCommand}" Style="{StaticResource ButtonSecondary}"/>
+            </StackPanel>
+
+            <!-- 外观 -->
+            <TextBlock Text="{loc:Loc Key=GroupAppearance}" Style="{StaticResource GroupTitle}"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="{loc:Loc Key=ToggleTheme}" Command="{Binding ToggleThemeCommand}" Style="{StaticResource ButtonSecondary}" Margin="0,0,8,0"/>
+                <ComboBox ItemsSource="{Binding SupportedLanguages}"
+                          SelectedValue="{Binding Language}"
+                          SelectedValuePath="Code"
+                          DisplayMemberPath="DisplayName"
+                          Width="160" VerticalContentAlignment="Center"/>
+            </StackPanel>
+
+            <!-- 数据与诊断 -->
+            <TextBlock Text="{loc:Loc Key=GroupData}" Style="{StaticResource GroupTitle}"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="{loc:Loc Key=Diagnostics}" Command="{Binding ExportDiagnosticsCommand}" Style="{StaticResource ButtonSecondary}" Width="150"/>
+            </StackPanel>
+            <TextBlock Text="{loc:Loc Key=DiagHint}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0"/>
+        </StackPanel>
+    </ScrollViewer>
+</Window>

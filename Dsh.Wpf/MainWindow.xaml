@@ -1,0 +1,1569 @@
+<Window x:Class="Dsh.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Dsh.Wpf"
+        xmlns:loc="clr-namespace:Dsh.Wpf"
+        xmlns:controls="clr-namespace:Dsh.Wpf.Controls"
+        Title="DeepSeek Harness — WPF" Height="720" Width="1080"
+        MinHeight="600" MinWidth="900"
+        SizeToContent="Manual"
+        Icon="pack://application:,,,/Assets/app.ico"
+        WindowStartupLocation="CenterScreen"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        FontFamily="Microsoft YaHei UI, 微软雅黑, Segoe UI"
+        FontSize="13"
+        Topmost="{Binding IsTopmost, Mode=TwoWay}"
+        AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <local:NullToVisibilityConverter x:Key="NullToVisibility"/>
+        <local:JobStatusColorConverter x:Key="JobStatusColor"/>
+        <local:SessionStatusDotConverter x:Key="SessionStatusDot"/>
+        <local:TodoStatusColorConverter x:Key="TodoStatusColor"/>
+        <local:CountToVisibilityConverter x:Key="SearchHitsToVisibility"/>
+        <local:NonEmptyToVisibilityConverter x:Key="NonEmptyToVisibility"/>
+        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+
+        <local:TimestampConverter x:Key="Timestamp"/>
+        <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <local:BoolToColorConverter x:Key="BoolToColor"/>
+        <local:BoolToTextConverter x:Key="BoolToText"/>
+        <local:NotificationColorConverter x:Key="NotificationColor"/>
+        <local:ComposerStateColorConverter x:Key="ComposerStateColor"/>
+        <local:ToolCardTemplateSelector x:Key="ToolCardSelector"/>
+        <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility"/>
+        <local:StringNotEmptyToBoolConverter x:Key="StringNotEmptyToBool"/>
+        <local:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
+        <local:ValueEqualsMultiConverter x:Key="ValueEquals"/>
+        <!-- 空状态：集合 Count==0 时显示占位文案。右侧面板多个 Tab 依赖 host 推送，
+             无数据时是正常状态（例如当前没有子任务/排队消息）；没有占位文案会让
+             用户误以为功能损坏。此处共享一份样式，避免每个 Tab 重复一遍模板。 -->
+        <local:CountToVisibilityConverter x:Key="CountZeroToVisibility"/>
+        <Style x:Key="PanelEmptyState" TargetType="TextBlock">
+            <Setter Property="Text" Value=""/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="10,16,10,16"/>
+        </Style>
+
+        <!-- 面板按钮共享样式（P1-10）：主/次/危险三档，统一圆角、悬停加深、聚焦描边 -->
+        <Style x:Key="PanelPrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#059669"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,5"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#047857"/>
+                </Trigger>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#059669"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.5"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="PanelInfoButton" TargetType="Button" BasedOn="{StaticResource PanelPrimaryButton}">
+            <Setter Property="Background" Value="#1D4ED8"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1E40AF"/>
+                </Trigger>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#1D4ED8"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="PanelDangerButton" TargetType="Button" BasedOn="{StaticResource PanelPrimaryButton}">
+            <Setter Property="Background" Value="#DC2626"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#B91C1C"/>
+                </Trigger>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#DC2626"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <DataTemplate x:Key="UserTemplate">
+            <!-- P2-fix（6a36cde 回归）: 自适应宽度 —— Border 单独 HorizontalAlignment=Right 让气泡按文本宽度自然撑开；
+            移除 MaxWidth=640 防止短/长 user 消息被强行折行窄气泡（教训见 9d7c668）。
+            依赖外层 ListBox 的 HorizontalContentAlignment=Stretch 让 ListBoxItem 自身撑满，再让 Border 在
+            StackPanel 内靠右对齐。 -->
+            <StackPanel Margin="0,6,0,6" HorizontalAlignment="Stretch">
+                <Border HorizontalAlignment="Right" Background="{DynamicResource Accent}" CornerRadius="12,12,2,12" Padding="10,7">
+                    <TextBlock Text="{Binding Text}" Foreground="{DynamicResource TextOnAccent}"
+                               TextWrapping="Wrap" FontSize="13"/>
+                </Border>
+                <!-- H5（P2-4）：用户消息同样支持反馈 + C18 复制；对齐 Web 双气泡一致 -->
+                <StackPanel Orientation="Horizontal" Margin="0,2,2,0" HorizontalAlignment="Right"
+                            Visibility="{Binding MessageId, Converter={StaticResource NullToVisibility}}">
+                    <Button Content="👍" Padding="4,1" FontSize="11" Margin="0,0,4,0" Cursor="Hand"
+                            ToolTip="{loc:Loc Key=MarkUseful}"
+                            Command="{Binding DataContext.SetPositiveFeedbackCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"/>
+                    <Button Content="👎" Padding="4,1" FontSize="11" Cursor="Hand"
+                            ToolTip="{loc:Loc Key=MarkImprove}"
+                            Command="{Binding DataContext.SetNegativeFeedbackCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"/>
+                    <Button Content="{loc:Loc Key=Copy}" Padding="4,1" FontSize="11" Margin="4,0,0,0" Cursor="Hand"
+                            ToolTip="{loc:Loc Key=Copy}"
+                            Command="{Binding DataContext.CopyMessageTextCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"/>
+                </StackPanel>
+                <TextBlock Text="{Binding Time, Converter={StaticResource Timestamp}}" FontSize="10"
+                           Foreground="{DynamicResource TextMuted}" Margin="0,2,2,0" HorizontalAlignment="Right"
+                           ToolTip="消息时间"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="AssistantTemplate">
+            <!-- M1：助手消息气泡。头像/标签仅在该轮首条助手消息（IsTurnStart）显示，避免重复。 -->
+            <Grid Margin="0,6,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <!-- 左侧头像列：仅该轮首条显示 -->
+                <Border Grid.Column="0" Width="28" Height="28" CornerRadius="14" VerticalAlignment="Top" Margin="0,2,6,0"
+                        Background="{DynamicResource AccentSoft}" Visibility="{Binding IsTurnStart, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="AI" Foreground="{DynamicResource Accent}" FontSize="10" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel Grid.Column="1" HorizontalAlignment="Stretch">
+                    <!-- 首条助手消息显示角色标签 + 时间戳 -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2"
+                                Visibility="{Binding IsTurnStart, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{loc:Loc Key=Ai}" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Time, Converter={StaticResource Timestamp}}" FontSize="10"
+                                   Foreground="{DynamicResource TextMuted}" Margin="8,0,0,0"
+                                   ToolTip="{loc:Loc Key=MessageTime}"/>
+                    </StackPanel>
+                    <!-- 气泡：Surface1 + 品牌左条，与用户右对齐品牌气泡对称 -->
+                    <Border Background="{DynamicResource Surface1}" BorderBrush="{DynamicResource Accent}" BorderThickness="3,0,0,0"
+                            CornerRadius="0,12,12,12" Padding="12,8">
+                        <StackPanel>
+                            <!-- M0/M1/自绘：一条助手消息的全部 Markdown（含 Reasoning 折叠 + 各块）由控件代码自绘 -->
+                            <controls:AssistantMessageControl Text="{Binding Text}" Reasoning="{Binding Reasoning}"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- H5（P2-4）：消息反馈 + C18 复制 -->
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0"
+                                Visibility="{Binding MessageId, Converter={StaticResource NullToVisibility}}">
+                        <Button Content="👍" Padding="4,1" FontSize="11" Margin="0,0,4,0" Cursor="Hand"
+                                ToolTip="{loc:Loc Key=MarkUseful}"
+                                Command="{Binding DataContext.SetPositiveFeedbackCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                        <Button Content="👎" Padding="4,1" FontSize="11" Cursor="Hand"
+                                ToolTip="{loc:Loc Key=MarkImprove}"
+                                Command="{Binding DataContext.SetNegativeFeedbackCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                    </StackPanel>
+                    <Button Content="{loc:Loc Key=Copy}" Padding="4,1" FontSize="11" Margin="0,2,0,0" HorizontalAlignment="Left"
+                            Cursor="Hand"
+                            ToolTip="{loc:Loc Key=Copy}"
+                            Command="{Binding DataContext.CopyMessageTextCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+        <!-- 工具卡片（P0-3）：通用头部（名称+状态色）+ 按类型渲染输出，未注册名回退通用 JSON 卡 -->
+        <DataTemplate x:Key="ToolHeaderTemplate">
+            <TextBlock Text="{Binding Name, StringFormat=🔧 {0}}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Status}" Value="done">
+                                <Setter Property="Foreground" Value="{DynamicResource Success}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}" Value="error">
+                                <Setter Property="Foreground" Value="{DynamicResource Danger}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </DataTemplate>
+        <!-- 递归子调用容器（共用选择器） -->
+        <DataTemplate x:Key="ToolChildrenTemplate">
+            <ItemsControl ItemsSource="{Binding Children}"
+                          Visibility="{Binding Children, Converter={StaticResource NullToVisibility}}"
+                          Margin="16,2,0,0"
+                          ItemTemplateSelector="{StaticResource ToolCardSelector}"/>
+        </DataTemplate>
+        <!-- 工具输出（B1）：统一走 AssistantMessageControl 做 Markdown 自绘，替代原始字符串/硬编码色 -->
+        <DataTemplate x:Key="ToolOutputTemplate">
+            <Border Margin="0,3,0,0" Background="{DynamicResource Surface1}" BorderBrush="{DynamicResource Border}"
+                    BorderThickness="1" Padding="8,6" CornerRadius="3"
+                    Visibility="{Binding Output, Converter={StaticResource NullToVisibility}}">
+                <controls:AssistantMessageControl Text="{Binding Output}"/>
+            </Border>
+        </DataTemplate>
+        <!-- C4: code/terminal/read/write/search/web/todo 等统一走标准卡（Header+Output+Children）；
+             diff 单独保留（绿/红行标注）。消除了 5 个字节级相同的模板。 -->
+        <DataTemplate x:Key="StandardToolTemplate">
+            <StackPanel Margin="0,2,0,2">
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolHeaderTemplate}"/>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolOutputTemplate}"/>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolChildrenTemplate}"/>
+            </StackPanel>
+        </DataTemplate>
+        <!-- diff：绿/红行标注（按 DiffLine.Kind 着色） -->
+        <DataTemplate x:Key="DiffToolTemplate">
+            <StackPanel Margin="0,2,0,2">
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolHeaderTemplate}"/>
+                <Border Margin="0,3,0,0" Background="{DynamicResource Surface1}" BorderBrush="{DynamicResource Border}" BorderThickness="1" Padding="4,2" CornerRadius="3"
+                        Visibility="{Binding DiffLines, Converter={StaticResource NullToVisibility}}">
+                    <ItemsControl ItemsSource="{Binding DiffLines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Text}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource MdTextMuted}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="add">
+                                                    <Setter Property="Foreground" Value="#047857"/>
+                                                    <Setter Property="Background" Value="#ECFDF5"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="remove">
+                                                    <Setter Property="Foreground" Value="#DC2626"/>
+                                                    <Setter Property="Background" Value="#FEF2F2"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Kind}" Value="header">
+                                                    <Setter Property="Foreground" Value="#7C3AED"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolChildrenTemplate}"/>
+            </StackPanel>
+        </DataTemplate>
+        <!-- 通用 JSON 卡（回退）：显示名称 + 参数 + 输出 -->
+        <DataTemplate x:Key="GenericToolTemplate">
+            <StackPanel Margin="0,2,0,2">
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolHeaderTemplate}"/>
+                <Expander Header="{loc:Loc Key=Msg.ToolArgs}" Margin="0,2,0,0"
+                          Visibility="{Binding Arguments, Converter={StaticResource NullToVisibility}}">
+                    <Border Background="{DynamicResource Surface3}" Padding="6" CornerRadius="3">
+                        <TextBlock Text="{Binding Arguments}" Foreground="{DynamicResource MdTextSecondary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"/>
+                    </Border>
+                </Expander>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolOutputTemplate}"/>
+                <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ToolChildrenTemplate}"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ToolTemplate">
+            <ContentControl Content="{Binding Tool}" ContentTemplateSelector="{StaticResource ToolCardSelector}"/>
+        </DataTemplate>
+        <!-- 系统提示：居中浅色胶囊，作为轮次/系统通知 -->
+        <DataTemplate x:Key="SystemTemplate">
+            <Border HorizontalAlignment="Center" Background="{DynamicResource Surface3}"
+                    CornerRadius="12" Padding="10,3" Margin="0,2,0,2" MaxWidth="520">
+                <TextBlock Text="{Binding Text}" Foreground="{DynamicResource TextMuted}" FontStyle="Italic"
+                           FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
+            </Border>
+        </DataTemplate>
+        <!-- Turn 分隔：居中胶囊条，含上下弱分隔线以便在多条消息间清晰划分轮次边界 -->
+        <DataTemplate x:Key="TurnTemplate">
+            <Grid Margin="0,12,0,8">
+                <Border Height="1" Background="{DynamicResource Border}" VerticalAlignment="Center" Margin="0,0,0,0"/>
+                <Border HorizontalAlignment="Center" Background="{DynamicResource Surface3}"
+                        BorderBrush="{DynamicResource Accent}" BorderThickness="1"
+                        CornerRadius="10" Padding="12,3" MaxWidth="520">
+                    <TextBlock Text="{Binding Text}" Foreground="{DynamicResource Accent}" FontSize="11"
+                               FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"/>
+                </Border>
+            </Grid>
+        </DataTemplate>
+        <!-- 错误消息：全宽红色卡片（红左条 + 浅红底），平铺自适应，不再靠左窄文本 -->
+        <DataTemplate x:Key="ErrorTemplate">
+            <Border Background="{DynamicResource MdErrorBackground}" BorderBrush="{DynamicResource MdError}"
+                    BorderThickness="3,0,0,0" CornerRadius="0,4,4,0" Padding="10,6" Margin="0,2,0,2">
+                <TextBlock Text="{Binding Text}" Foreground="{DynamicResource MdError}"
+                           TextWrapping="Wrap" TextAlignment="Left"/>
+            </Border>
+        </DataTemplate>
+        <!-- 元信息行（C13/C14 compaction、C15 retry）：居中浅色提示条，按 Role 显示不同图标 -->
+        <DataTemplate x:Key="MetaTemplate">
+            <Border HorizontalAlignment="Center" Background="{DynamicResource Surface3}"
+                    CornerRadius="10" Padding="12,3" Margin="0,4,0,4" MaxWidth="560">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontSize="11" Margin="0,0,6,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="🔄"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Role}" Value="compacted">
+                                        <Setter Property="Text" Value="🗜"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Text}" Foreground="{DynamicResource TextMuted}" FontSize="11"
+                               FontStyle="Italic" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+        <!-- C13：上下文注入披露行（role="context"，来自插件/技能/会话引用等，非用户主动输入）。
+             以浅色虚线边框区分普通用户气泡，弱化其"主动提问"语义。-->
+        <DataTemplate x:Key="ContextTemplate">
+            <Border Margin="0,2,0,2" Padding="10,6" CornerRadius="4"
+                    Background="{DynamicResource Surface2}"
+                    BorderBrush="{DynamicResource Accent}" BorderThickness="1,0,0,0">
+                <StackPanel>
+                    <TextBlock FontSize="10" Foreground="{DynamicResource TextMuted}"
+                               FontWeight="SemiBold" Margin="0,0,0,3">
+                        <Run Text="⇲"/><Run Text=" "/><Run Text="{loc:Loc Key=Fold.ContextLabel}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Text}" Foreground="{DynamicResource TextMuted}"
+                               FontSize="11" FontStyle="Italic" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+        <DataTemplate x:Key="ChatEntryTemplate">
+            <ContentControl Content="{Binding}">
+                <ContentControl.Style>
+                    <Style TargetType="ContentControl">
+                        <Setter Property="ContentTemplate" Value="{StaticResource AssistantTemplate}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Role}" Value="user">
+                                <Setter Property="ContentTemplate" Value="{StaticResource UserTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Role}" Value="tool">
+                                <Setter Property="ContentTemplate" Value="{StaticResource ToolTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Role}" Value="system">
+                                <Setter Property="ContentTemplate" Value="{StaticResource SystemTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Role}" Value="error">
+                                <Setter Property="ContentTemplate" Value="{StaticResource ErrorTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Role}" Value="turn">
+                                <Setter Property="ContentTemplate" Value="{StaticResource TurnTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Role}" Value="compacted">
+                                <Setter Property="ContentTemplate" Value="{StaticResource MetaTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Role}" Value="retry">
+                                <Setter Property="ContentTemplate" Value="{StaticResource MetaTemplate}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Role}" Value="context">
+                                <Setter Property="ContentTemplate" Value="{StaticResource ContextTemplate}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ContentControl.Style>
+            </ContentControl>
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel Background="{DynamicResource AppBackgroundBrush}">
+        <!-- D2：统一通知条改为覆盖式浮层——Popup 不占布局空间，通知显示/消失不再导致状态栏
+             高度变化、发送框不再跳动。PlacementTarget 指向状态栏 Border，浮在其上方。 -->
+        <Popup x:Name="NotificationPopup"
+               PlacementTarget="{Binding ElementName=StatusBarHost}"
+               Placement="Top"
+               StaysOpen="True"
+               AllowsTransparency="True"
+               Focusable="False"
+               IsOpen="{Binding NotificationText, Converter={StaticResource StringNotEmptyToBool}}">
+            <Border Background="{DynamicResource Surface2}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4"
+                    Padding="12,7" Margin="0,0,0,6" MaxWidth="520"
+                    HorizontalAlignment="Center">
+                <TextBlock Text="{Binding NotificationText}" TextWrapping="Wrap" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{Binding NotificationKind, Converter={StaticResource NotificationColor}}"/>
+            </Border>
+        </Popup>
+        <!-- 顶部：连接栏 -->
+        <Border DockPanel.Dock="Top" Padding="8" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                <!-- 连接/会话主操作区：HostUrl 为只读状态展示（点击链接按钮才进入配置），
+                     含连接状态点 + 服务管理展开按钮（连接与服务强关联，视觉紧邻） -->
+                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4"
+                        Padding="8,3" Margin="0,0,6,0" Background="{DynamicResource Surface2}"
+                        HorizontalAlignment="Left">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- 连接状态点：绿=已连接 / 红=断开 -->
+                        <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,6,0"
+                                 Fill="{Binding IsConnected, Converter={StaticResource BoolToColor}}"
+                                 ToolTip="{loc:Loc Key=Connect.Current}"/>
+                        <!-- 链接/配置按钮：点击进入连接配置弹窗 -->
+                        <Button Click="ConfigureConnection_Click" Padding="2,0" Margin="0,0,6,0"
+                                Style="{StaticResource ButtonGhost}" ToolTip="{loc:Loc Key=Connect.Edit}">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE8E1;" VerticalAlignment="Center"/>
+                        </Button>
+                        <!-- 只读地址（类似浏览器地址栏） -->
+                        <TextBlock Text="{Binding HostUrl}" VerticalAlignment="Center" FontFamily="Consolas" FontSize="12"
+                                   Foreground="{DynamicResource TextPrimary}" MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+                        <!-- 服务配置展开按钮：图标+Harness 名称，明确指向 deepseek-harness 服务配置
+                             状态染色（问题1）：未启动=红色，已正常启动=绿色 -->
+                        <Button Padding="6,1" Margin="8,0,0,0" Cursor="Hand" FontSize="11" FontWeight="SemiBold"
+                                Command="{Binding ToggleHarnessPanelCommand}" ToolTip="{loc:Loc Key=Harness.TogglePanel}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource ButtonGhost}">
+                                    <Setter Property="Foreground" Value="{DynamicResource Danger}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Danger}"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Setter Property="ContentTemplate">
+                                        <Setter.Value>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="12" Text="&#xE77B;"
+                                                               VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="{loc:Loc Key=Harness.ServiceName}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HostLaunched}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource Success}"/>
+                                            <Setter Property="BorderBrush" Value="{DynamicResource Success}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                <Button Command="{Binding NewSessionCommand}" Style="{StaticResource ButtonGhost}" Padding="10,4" Margin="0,0,8,0" ToolTip="{loc:Loc Key=NewSession}">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE8F1;" VerticalAlignment="Center"/>
+                </Button>
+                <Button Command="{Binding AddWorkspaceCommand}" Padding="10,4" Margin="0,0,8,0" ToolTip="{loc:Loc Key=AddWorkspace}">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE8B7;" VerticalAlignment="Center"/>
+                </Button>
+                <Button Click="NewWindow_Click" Padding="10,4" Margin="0,0,12,0"
+                        ToolTip="{loc:Loc Key=Tb.NewWindow}">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE8A7;" VerticalAlignment="Center"/>
+                </Button>
+                <Separator Width="1" Height="22" Margin="0,0,12,0"/>
+                <!-- 模型区 -->
+                <ComboBox ItemsSource="{Binding ModelChoices}"
+                          SelectedValue="{Binding SelectedModelId}"
+                          SelectedValuePath="Id"
+                          DisplayMemberPath="Label"
+                          Width="200" Margin="0,0,8,0" VerticalContentAlignment="Center"
+                          SelectionChanged="ModelComboBox_SelectionChanged"/>
+                <Separator Width="1" Height="22" Margin="0,0,12,0"/>
+                <!-- Open Web：服务运行时常驻顶部（建议2修订——不再隐藏于底部折叠区） -->
+                <Button Command="{Binding OpenWebCommand}" Padding="10,4" Margin="0,0,12,0"
+                        ToolTip="{loc:Loc Key=OpenWeb}">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="16" Text="&#xE774;" VerticalAlignment="Center"/>
+                </Button>
+                <!-- K4：始终置顶切换（持久化到 AppSettings），矢量图标 Pin（Segoe MDL2 \uE718） -->
+                <Button Command="{Binding ToggleTopmostCommand}" Padding="8,2" Margin="0,0,6,0"
+                        ToolTip="{loc:Loc Key=Tb.ToggleTopmost}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonGhost}">
+                            <Setter Property="Content">
+                                <Setter.Value>
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE718;" VerticalAlignment="Center"/>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsTopmost}" Value="True">
+                                    <Setter Property="Foreground" Value="#B45309"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <!-- U5：设置入口（收纳连接/模型/外观/诊断），矢量图标 Settings（Segoe MDL2 \uE713） -->
+                <Button Click="OpenSettings_Click" Style="{StaticResource ButtonGhost}" Padding="8,2"
+                        Margin="0,0,6,0" ToolTip="{loc:Loc Key=Tb.Settings}">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE713;" VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+            <!-- 服务管理折叠区（与连接配置合并于顶部——同一 harness 服务） -->
+            <Border Margin="0,6,0,0" Background="{DynamicResource WarningSoft}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="4"
+                    Padding="10,8" Visibility="{Binding ShowHarnessPanel, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <!-- LaunchStatus 为空时隐藏，避免服务未启动时目录上方出现空行 -->
+                    <TextBlock Text="{Binding LaunchStatus}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,6"
+                               Visibility="{Binding LaunchStatus, Converter={StaticResource EmptyStringToVisibility}}"/>
+
+                    <!-- 未构建提示：checkout 存在但 apps/web-dist 缺失。点击按钮执行 pnpm install + build 后启动 -->
+                    <Border Margin="0,0,0,6" Background="{DynamicResource WarningSoft}" BorderBrush="{DynamicResource Warning}" BorderThickness="1" CornerRadius="4" Padding="8,6"
+                            Visibility="{Binding HarnessNeedsBuild, Converter={StaticResource BoolToVisibility}}">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="{loc:Loc Key=InitAndStart}" Command="{Binding StartHarnessCommand}" Style="{StaticResource ButtonPrimary}" Padding="12,5" Margin="8,0,4,0"
+                                    Visibility="{Binding IsInitializing, Converter={StaticResource InverseBoolToVisibility}}"/>
+                            <Button DockPanel.Dock="Right" Content="{loc:Loc Key=Cancel}" Command="{Binding CancelInitCommand}" Style="{StaticResource ButtonGhost}" Padding="12,5" Margin="8,0,4,0"
+                                    Visibility="{Binding IsInitializing, Converter={StaticResource BoolToVisibility}}"/>
+                            <TextBlock Text="{loc:Loc Key=Harness.NotBuilt}" TextWrapping="Wrap" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <DockPanel Margin="0,0,0,2">
+                        <Button DockPanel.Dock="Right" Content="{loc:Loc Key=StopService}" Command="{Binding StopServiceCommand}" Style="{StaticResource ButtonDanger}" Padding="12,5" Margin="8,0,0,0"
+                                IsEnabled="{Binding ServiceRunning}"/>
+                        <Button DockPanel.Dock="Right" Content="{loc:Loc Key=RefreshStatus}" Command="{Binding RefreshHarnessStatusCommand}" Style="{StaticResource ButtonSecondary}" Padding="12,5" Margin="8,0,0,0"/>
+                        <Button DockPanel.Dock="Right" Content="{loc:Loc Key=StartService}" Command="{Binding StartHarnessCommand}" Style="{StaticResource ButtonPrimary}" Padding="16,5"
+                                IsEnabled="{Binding IsLaunching, Converter={StaticResource InverseBoolConverter}}"/>
+                        <Button DockPanel.Dock="Right" Content="{loc:Loc Key=PickDirectory}" Command="{Binding PickHarnessDirectoryCommand}" Style="{StaticResource ButtonSecondary}" Padding="12,5" Margin="8,0,0,0"/>
+                        <TextBox Text="{Binding HarnessDirectory}" IsReadOnly="True" Padding="4" VerticalContentAlignment="Center"
+                                 ToolTip="{loc:Loc Key=HarnessDirectory}" Style="{StaticResource TextBoxReadOnly}"/>
+                    </DockPanel>
+                    <!-- 启动输出（可折叠） -->
+                    <Border Margin="0,6,0,0" Background="{DynamicResource CodeBackground}" Padding="8,4">
+                        <DockPanel LastChildFill="False">
+                            <TextBlock DockPanel.Dock="Left" Text="{loc:Loc Key=Log.Title}" FontWeight="SemiBold" Foreground="{DynamicResource TextOnAccent}" VerticalAlignment="Center"/>
+                            <Button DockPanel.Dock="Right" Content="{Binding ShowHarnessLog, Converter={StaticResource BoolToText}}"
+                                    Padding="8,1" FontSize="11" Background="#374151" Foreground="{DynamicResource TextOnAccent}"
+                                    Command="{Binding ToggleHarnessLogCommand}"/>
+                        </DockPanel>
+                    </Border>
+                    <Border Background="{DynamicResource CodeBackground}" BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="4"
+                            Visibility="{Binding ShowHarnessLog, Converter={StaticResource BoolToVisibility}}">
+                        <DockPanel>
+                            <!-- 日志工具条：复制全部；提供 Ctrl+C 复制选中（命中 ListBox）。 -->
+                            <Button DockPanel.Dock="Top" Margin="0,0,0,4" HorizontalAlignment="Right"
+                                    Content="{loc:Loc Key=Log.CopyAll}"
+                                    Command="{Binding CopyHarnessLogAllCommand}"
+                                    ToolTip="{loc:Loc Key=Log.CopyAllTip}"
+                                    Style="{StaticResource ButtonSecondary}" Padding="8,1" FontSize="11"/>
+                            <ListBox x:Name="HarnessLogList" ItemsSource="{Binding HarnessLog}" MaxHeight="140"
+                                     Background="{DynamicResource CodeBackground}" Foreground="{DynamicResource TextOnAccent}"
+                                     BorderThickness="0" FontFamily="Consolas" FontSize="11"
+                                     SelectionMode="Extended"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.InputBindings>
+                                    <!-- Ctrl+C 优先复制选中行；若无选中则由命令退化为复制全部。 -->
+                                    <KeyBinding Key="C" Modifiers="Control"
+                                                Command="{Binding CopyHarnessLogSelectionCommand}"
+                                                CommandParameter="{Binding ElementName=HarnessLogList, Path=SelectedItems}"/>
+                                </ListBox.InputBindings>
+                                <ListBox.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="{loc:Loc Key=Log.CopySelection}"
+                                                  Command="{Binding CopyHarnessLogSelectionCommand}"
+                                                  CommandParameter="{Binding PlacementTarget.SelectedItems, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="{loc:Loc Key=Log.CopyAll}"
+                                                  Command="{Binding CopyHarnessLogAllCommand}"/>
+                                    </ContextMenu>
+                                </ListBox.ContextMenu>
+                            </ListBox>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- 底部统一状态栏（含服务控制折叠区——建议2：服务管理完全合并入状态栏）。
+             x:Name 供通知浮层 Popup 定位（D2：通知改为覆盖式，不占布局，避免发送框跳动）。 -->
+        <Border x:Name="StatusBarHost" DockPanel.Dock="Bottom" Padding="10,3" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <StackPanel>
+                <DockPanel LastChildFill="True">
+                    <!-- 流式呼吸指示：正在接收 assistant chunks 时显示动画圆点 -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0"
+                                Visibility="{Binding IsStreaming, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                         From="0.3" To="1" Duration="0:0:0.6"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </StackPanel.Triggers>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="{loc:Loc Key=Streaming}" Foreground="{DynamicResource TextMuted}" FontSize="11" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <!-- P2-7 / C17：会话统计条（富 StatsLine）——有投影时显示 ring+detail，否则隐藏 -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0"
+                                Visibility="{Binding HasRichStats, Converter={StaticResource BoolToVisibility}}">
+                        <!-- 上下文占用 ring：圆章显示百分比（无 pressure 投影时隐藏）；悬停显示精确 token 数 -->
+                        <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource AccentSoft}"
+                                Visibility="{Binding StatsRingText, Converter={StaticResource EmptyStringToVisibility}}"
+                                ToolTip="{Binding StatsRingTooltip}">
+                            <TextBlock Text="{Binding StatsRingText}" Foreground="{DynamicResource Accent}"
+                                       FontWeight="Bold" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <!-- detail：超长省略号截断，悬停 Tooltip 显示完整行（对齐 Web StatsLine ellipsis + tooltip） -->
+                        <TextBlock Text="{Binding StatsDetailText}" Foreground="{DynamicResource TextMuted}"
+                                   VerticalAlignment="Center" Margin="8,0,0,0" FontSize="11"
+                                   MaxWidth="420" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding StatsDetailText}"/>
+                    </StackPanel>
+                    <!-- 文本回退：无投影（host 未推送）时显示纯文本旧格式；二者互斥由 HasRichStats 覆盖。 -->
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding SessionStatsText}"
+                               Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
+                               Visibility="{Binding HasRichStats, Converter={StaticResource InverseBoolToVisibility}}"
+                               ToolTip="{loc:Loc Key=Sb.SessionStats}"/>
+                    <TextBlock DockPanel.Dock="Right" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="12,0,0,0" ToolTip="{loc:Loc Key=Sb.CurrentModel}">
+                        <Run Text="{loc:Loc Key=Sb.ModelPrefix}"/><Run Text="{Binding ModelLabel}"/>
+                    </TextBlock>
+                    <TextBlock DockPanel.Dock="Right" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="12,0,0,0" ToolTip="{loc:Loc Key=Sb.CurrentSession}">
+                        <Run Text="{loc:Loc Key=Sb.SessionPrefix}"/><Run Text="{Binding SelectedSessionId}"/>
+                    </TextBlock>
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding ConnectionStatus}"
+                               Foreground="{Binding IsConnected, Converter={StaticResource BoolToColor}}"
+                               VerticalAlignment="Center" Margin="12,0,0,0" ToolTip="{loc:Loc Key=Sb.ConnectionStatus}"/>
+                    <!-- 服务状态点（只读；服务管理已合并到顶部连接区） -->
+                    <StackPanel Orientation="Horizontal" ToolTip="{loc:Loc Key=Sb.ServiceStatus}">
+                        <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,6,0"
+                                 Fill="{Binding ServiceRunning, Converter={StaticResource BoolToColor}}"/>
+                        <TextBlock Text="{Binding HarnessStatusText}" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </DockPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 底部：问题面板 + 审批面板 + Composer -->
+        <StackPanel DockPanel.Dock="Bottom">
+            <Border Padding="12,8" Background="{DynamicResource InfoBackground}" BorderBrush="{DynamicResource InfoBorder}" BorderThickness="0,1,0,0"
+                    Visibility="{Binding PendingQuestion, Converter={StaticResource NullToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="{loc:Loc Key=Q.AnswerNeeded}" FontWeight="SemiBold" Foreground="{DynamicResource InfoText}" Margin="0,0,0,6"/>
+                    <ItemsControl ItemsSource="{Binding PendingQuestions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <!-- D4: plan-review approval card (kind == 'plan-review') -->
+                                    <Border Margin="0,4" Padding="10,8" Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}" BorderThickness="1"
+                                            CornerRadius="4" Visibility="{Binding IsPlanReview, Converter={StaticResource BoolToVisibility}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{loc:Loc Key=Q.PlanReview}" FontWeight="Bold" Foreground="{DynamicResource WarningText}" Margin="0,0,0,4"/>
+                                            <TextBlock Text="{Binding Approve}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,8"/>
+                                            <Button Content="{loc:Loc Key=Q.Approve}" Command="{Binding DataContext.SubmitAnswersCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    Style="{StaticResource PanelPrimaryButton}" HorizontalAlignment="Left"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- Ordinary question affordance (hidden for plan-review) -->
+                                    <StackPanel Margin="0,4" Visibility="{Binding IsPlanReview, Converter={StaticResource InverseBoolToVisibility}}">
+                                        <TextBlock Text="{Binding Question}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <ItemsControl ItemsSource="{Binding Options}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox Margin="0,2,0,0" IsChecked="{Binding IsSelected}">
+                                                        <TextBlock Text="{Binding Label}" TextWrapping="Wrap"/>
+                                                    </CheckBox>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <TextBox Text="{Binding Custom, UpdateSourceTrigger=PropertyChanged}"
+                                                 TextWrapping="Wrap" Margin="0,4,0,0"
+                                                 ToolTip="{loc:Loc Key=Q.CustomHint}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="{loc:Loc Key=Q.Submit}" Command="{Binding SubmitAnswersCommand}"
+                            Style="{StaticResource PanelInfoButton}" Margin="0,6,0,0"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+            <Border Padding="12,8" Background="{DynamicResource WarningBackground}" BorderBrush="{DynamicResource WarningBorder}" BorderThickness="0,1,0,0"
+                    Visibility="{Binding PendingApproval, Converter={StaticResource NullToVisibility}}">
+                <StackPanel>
+                    <TextBlock FontWeight="SemiBold" Foreground="{DynamicResource WarningText}">
+                        <Run Text="{loc:Loc Key=Q.ToolPermitPrefix}"/><Run Text="{Binding PendingApproval.Frame.ToolName}"/><Run Text="{loc:Loc Key=Q.ToolPermitSuffix}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding PendingApproval.Frame.Reason}" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="0,2,0,6"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="{loc:Loc Key=Q.AllowOnce}" Command="{Binding ApproveOnceCommand}" Style="{StaticResource PanelPrimaryButton}" Margin="0,0,8,0"/>
+                        <Button Content="{loc:Loc Key=Q.Reject}" Command="{Binding RejectCommand}" Style="{StaticResource PanelDangerButton}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <!-- D3 / D5 chips：plan 状态 + 权限预设。点击 chip → 通过 session.prompt 发送对应的
+                 斜杠命令（/plan off 或 /permission <preset>），宿主经命令注册表执行，不进入对话、
+                 不触发 AI 轮次；结果由 plan/permissions 投影回包刷新 UI。danger-full-access 的二次
+                 确认由宿主侧（approval/requested 帧）处理，客户端无需确认 UI。 -->
+            <Border Padding="8,4" Background="{DynamicResource Surface2}" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0"
+                    Visibility="{Binding HasPermissionSelect, Converter={StaticResource BoolToVisibility}}">
+                <WrapPanel VerticalAlignment="Center">
+                    <!-- D3 plan chip：仅在 plan 投影挂载时出现 -->
+                    <Border Background="{DynamicResource AccentSoft}" CornerRadius="10" Padding="8,2" Margin="0,2,6,2"
+                            ToolTip="Plan 模式已激活；点击把“/plan off”填入输入框，按 Enter 退出（不会自动发送）">
+                        <Button Content="📋 plan" Command="{Binding TogglePlanCommand}" Style="{StaticResource GhostButton}"
+                                FontSize="11" Cursor="Hand" Padding="0"
+                                ToolTip="Plan 模式激活中；点击立即退出（/plan off，不进入对话）"/>
+                    </Border>
+                    <!-- D5 permission preset chips -->
+                    <ItemsControl ItemsSource="{Binding PermissionOptions}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="10" Padding="8,2" Margin="0,2,6,2">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource Surface3}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Value="True">
+                                                    <DataTrigger.Binding>
+                                                        <MultiBinding Converter="{StaticResource ValueEquals}">
+                                                            <Binding Path="Value"/>
+                                                            <Binding Path="DataContext.PermissionCurrent"
+                                                                     RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                        </MultiBinding>
+                                                    </DataTrigger.Binding>
+                                                    <Setter Property="Background" Value="{DynamicResource AccentSoft}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Button Content="{Binding Name}" Command="{Binding DataContext.SetPermissionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding Value}" Style="{StaticResource GhostButton}"
+                                            FontSize="11" Cursor="Hand" Padding="0"
+                                            ToolTip="{Binding Description}"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- 当前权限（只读标签） -->
+                    <TextBlock Text="{Binding PermissionCurrent}" Foreground="{DynamicResource TextMuted}" FontSize="10"
+                               VerticalAlignment="Center" Margin="2,0,0,0"/>
+                </WrapPanel>
+            </Border>
+            <Border Padding="8" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="{Binding SendButtonText}" Command="{Binding SendCommand}" Margin="8,0,0,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ButtonPrimary}">
+                                <Setter Property="ToolTip" Value="发送（Enter）"/>
+                                <Setter Property="IsEnabled" Value="True"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ComposerMode}" Value="Running">
+                                        <Setter Property="ToolTip" Value="入队（Enter）：追加到当前运行轮次之后"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ComposerMode}" Value="Steering">
+                                        <Setter Property="ToolTip" Value="正在插队…"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsSending}" Value="True">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Setter Property="ToolTip" Value="发送中…"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button DockPanel.Dock="Right" Content="{loc:Loc Key=Composer.Steer}" Command="{Binding SendSteerCommand}" Padding="10,6" Margin="0,0,8,0"
+                            ToolTip="{loc:Loc Key=Composer.EnterQueueHint}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ButtonSecondary}">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding CanSteer}" Value="True"/>
+                                            <Condition Binding="{Binding IsSending}" Value="False"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="IsEnabled" Value="True"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button DockPanel.Dock="Right" Content="{loc:Loc Key=Composer.AddImage}" Command="{Binding AddImageCommand}" Style="{StaticResource ButtonSecondary}" Padding="10,6" Margin="0,0,8,0"/>
+                    <Button DockPanel.Dock="Right" Content="{loc:Loc Key=Composer.ClearImage}" Command="{Binding ClearImagesCommand}" Style="{StaticResource ButtonSecondary}" Padding="10,6" Margin="0,0,8,0"
+                            Visibility="{Binding PendingImageCount, Converter={StaticResource SearchHitsToVisibility}}"/>
+                    <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Foreground="{DynamicResource TextMuted}">
+                        <Run Text="{loc:Loc Key=Composer.Attached}"/><Run Text="{Binding PendingImageCount, Mode=OneWay}"/>
+                    </TextBlock>
+                    <!-- 输入状态徽标（P0-2）：灰=空闲 / 蓝=运行中 / 紫=插队中 -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,6,0"
+                                 Fill="{Binding ComposerMode, Converter={StaticResource ComposerStateColor}}"/>
+                        <TextBlock Text="{Binding ComposerModeText}" Foreground="{DynamicResource TextSecondary}" FontSize="12" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <!-- Enter 行为偏好（P1-8）：busy 时 Enter=入队 或 插队 -->
+                    <ComboBox DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,10,0" Width="110" FontSize="12"
+                              SelectedValue="{Binding BusyEnterAction}" SelectedValuePath="Tag"
+                              ToolTip="{loc:Loc Key=Composer.EnterHintBusy}">
+                        <ComboBoxItem Tag="queue" Content="{loc:Loc Key=Composer.Queue}"/>
+                        <ComboBoxItem Tag="alwaysSteer" Content="{loc:Loc Key=Composer.Steer}"/>
+                    </ComboBox>
+                    <DockPanel>
+                        <Border DockPanel.Dock="Bottom" MaxHeight="160" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Background="{DynamicResource Surface2}"
+                                Visibility="{Binding CommandMatches.Count, Converter={StaticResource SearchHitsToVisibility}}">
+                            <ListBox ItemsSource="{Binding CommandMatches}" BorderThickness="0" Background="Transparent"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     SelectedIndex="{Binding SelectedCommandIndex, Mode=TwoWay}">
+                                <ListBox.InputBindings>
+                                    <!-- 键盘导航（P1-7）：上/下移候选、Enter 应用、Esc 关闭 -->
+                                    <KeyBinding Key="Up" Command="{Binding MoveCommandSelectionCommand}" CommandParameter="-1"/>
+                                    <KeyBinding Key="Down" Command="{Binding MoveCommandSelectionCommand}" CommandParameter="1"/>
+                                    <KeyBinding Key="Enter" Command="{Binding ApplySelectedCommandCommand}"/>
+                                    <KeyBinding Key="Escape" Command="{Binding ClearCommandMenuCommand}"/>
+                                </ListBox.InputBindings>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,1" ToolTip="{loc:Loc Key=Composer.InsertCommand}">
+                                            <StackPanel.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick"
+                                                              Command="{Binding DataContext.ApplyCommandCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                              CommandParameter="{Binding}"/>
+                                            </StackPanel.InputBindings>
+                                            <TextBlock FontFamily="Consolas">
+                                                <Run Text="{Binding Name, Mode=OneWay, StringFormat=/{0}}"/>
+                                                <Run Text="{Binding Group, Mode=OneWay}" Foreground="{DynamicResource TextMuted}" FontSize="10"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Description}" FontSize="11" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Border>
+                        <StackPanel>
+                            <TextBox x:Name="ComposerBox" Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="48"
+                                     VerticalContentAlignment="Top" Padding="6"
+                                     IsEnabled="{Binding IsRoutable}"
+                                     PreviewKeyDown="Composer_PreviewKeyDown">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SendCommand}"/>
+                                    <KeyBinding Key="Enter" Modifiers="Control" Command="{Binding SendSteerCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Border Padding="6,3" Background="{DynamicResource DangerBackground}" BorderBrush="{DynamicResource Danger}" BorderThickness="0,1,0,0"
+                                    Visibility="{Binding IsRoutable, Converter={StaticResource InverseBoolToVisibility}}">
+                                <TextBlock Text="{Binding RoutableMessage}" Foreground="{DynamicResource Danger}" FontSize="11" TextWrapping="Wrap"/>
+                            </Border>
+                        </StackPanel>
+                    </DockPanel>
+                </DockPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- 左侧：会话列表 + 子代理 -->
+        <Border DockPanel.Dock="Left" Width="260" BorderBrush="{DynamicResource Border}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="{loc:Loc Key=Workspace}" FontWeight="Bold" Padding="12,10" Background="{DynamicResource Surface2}" Foreground="{DynamicResource TextPrimary}"/>
+                        <DockPanel Margin="6,2,6,6" Background="{DynamicResource PanelAltBackgroundBrush}">
+                            <Button DockPanel.Dock="Right" Content="{loc:Loc Key=Search.Title}" Command="{Binding SearchSessionsCommand}" Style="{StaticResource ButtonSecondary}" Padding="8,2" Margin="4,0,0,0"/>
+                            <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="4" VerticalContentAlignment="Center"/>
+                        </DockPanel>
+                    </StackPanel>
+                    <TreeView x:Name="SessionTree" Grid.Row="1" ItemsSource="{Binding Workspaces}" BorderThickness="0"
+                              AllowDrop="True" PreviewMouseLeftButtonDown="SessionTree_PreviewMouseLeftButtonDown"
+                              DragOver="SessionTree_DragOver" Drop="SessionTree_Drop"
+                              HorizontalContentAlignment="Stretch">
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                                <Setter Property="IsExpanded" Value="True"/>
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Sessions}">
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="13" Text="{Binding Icon}"
+                                               VerticalAlignment="Center" Margin="0,0,6,0" Foreground="{DynamicResource TextSecondary}"/>
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center">
+                                        <TextBlock.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="{loc:Loc Key=Menu.DeleteWorkspace}" Command="{Binding PlacementTarget.DataContext.DeleteWorkspaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                      CommandParameter="{Binding}"/>
+                                            <Separator/>
+                                            <MenuItem Header="{loc:Loc Key=Menu.CopyPath}" Command="{Binding PlacementTarget.DataContext.CopyWorkspacePathCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                      CommandParameter="{Binding}"/>
+                                        </ContextMenu>
+                                    </TextBlock.ContextMenu>
+                                    </TextBlock>
+                                </StackPanel>
+                                <HierarchicalDataTemplate.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" Margin="2,3">
+                                            <StackPanel.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="{loc:Loc Key=Menu.Rename}" Command="{Binding PlacementTarget.DataContext.RenameSessionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    <MenuItem Header="{loc:Loc Key=Menu.OpenFolder}" Command="{Binding PlacementTarget.DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    <MenuItem Header="{loc:Loc Key=Menu.ForkSession}" Command="{Binding PlacementTarget.DataContext.ForkSessionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    <Separator/>
+                                                    <MenuItem Header="{loc:Loc Key=Menu.CopyPath}" Command="{Binding PlacementTarget.DataContext.CopySessionPathCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    <MenuItem Header="{loc:Loc Key=Menu.CopyTitle}" Command="{Binding PlacementTarget.DataContext.CopySessionTitleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    <Separator/>
+                                                    <MenuItem Header="{loc:Loc Key=Menu.Archive}" Command="{Binding PlacementTarget.DataContext.ArchiveSessionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}"/>
+                                                    <MenuItem Header="{loc:Loc Key=Menu.Refresh}" Command="{Binding PlacementTarget.DataContext.RefreshSessionsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                </ContextMenu>
+                                            </StackPanel.ContextMenu>
+                                            <StackPanel.ToolTip>
+                                                <!-- 悬停卡片（P1-1）：路径 / 更新时间 / 状态 / 会话 id -->
+                                                <Border Background="{DynamicResource CardSurface}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
+                                                        Padding="10,8" CornerRadius="4" MaxWidth="320">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap"/>
+                                                        <TextBlock FontFamily="Consolas" FontSize="10" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0">
+                                                            <Run Text="{loc:Loc Key=Hover.Session}"/><Run Text="{Binding Id}"/>
+                                                        </TextBlock>
+                                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}" TextWrapping="Wrap" Margin="0,3,0,0">
+                                                            <Run Text="{loc:Loc Key=Hover.Path}"/><Run Text="{Binding Cwd}"/>
+                                                        </TextBlock>
+                                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="0,2,0,0">
+                                                            <Run Text="{loc:Loc Key=Hover.Updated}"/><Run Text="{Binding UpdatedAtText}"/>
+                                                        </TextBlock>
+                                                        <TextBlock FontSize="11" Margin="0,2,0,0">
+                                                            <Run Text="{loc:Loc Key=Hover.Status}"/><Run Text="{Binding KindText}"/>
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding KindKey}" Value="Running">
+                                                                            <Setter Property="Foreground" Value="#3B82F6"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding KindKey}" Value="Active">
+                                                                            <Setter Property="Foreground" Value="#059669"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding KindKey}" Value="Awaiting">
+                                                                            <Setter Property="Foreground" Value="#D97706"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </Border>
+                                            </StackPanel.ToolTip>
+                                            <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="12" Text="{Binding Icon}"
+                                                       VerticalAlignment="Center" Margin="0,0,5,0" Foreground="{DynamicResource TextSecondary}"/>
+                                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,6,0">
+                                                <Ellipse.Fill>
+                                                    <MultiBinding Converter="{StaticResource SessionStatusDot}">
+                                                        <Binding Path="Running"/>
+                                                        <Binding Path="Waiting"/>
+                                                        <Binding Path="JobRunning"/>
+                                                    </MultiBinding>
+                                                </Ellipse.Fill>
+                                            </Ellipse>
+                                            <TextBlock Text="{Binding Title}" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </HierarchicalDataTemplate.ItemTemplate>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                    <Border Grid.Row="2" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Background="{DynamicResource Surface2}"
+                            Visibility="{Binding SearchHits.Count, Converter={StaticResource SearchHitsToVisibility}}">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="{loc:Loc Key=Search.Results}" FontWeight="SemiBold" Padding="12,8" Background="#EFF6FF" FontSize="12"/>
+                            <ListBox ItemsSource="{Binding SearchHits}" BorderThickness="0" Background="Transparent"
+                                     MaxHeight="160" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,2" ToolTip="{loc:Loc Key=Search.ClickOpen}">
+                                            <StackPanel.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick"
+                                                              Command="{Binding DataContext.OpenSearchHitCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                              CommandParameter="{Binding}"/>
+                                            </StackPanel.InputBindings>
+                                            <TextBlock Text="{Binding SessionId}" FontFamily="Consolas" FontSize="10" Foreground="{DynamicResource TextMuted}" TextTrimming="CharacterEllipsis"/>
+                                            <ItemsControl ItemsSource="{Binding Segments}" FontSize="11" TextElement.Foreground="#1F2937">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Background" Value="Transparent"/>
+                                                                    <Setter Property="FontWeight" Value="Normal"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsMatch}" Value="True">
+                                                                            <Setter Property="Background">
+                                                                                <Setter.Value>
+                                                                                    <DynamicResource ResourceKey="HighlightBackground"/>
+                                                                                </Setter.Value>
+                                                                            </Setter>
+                                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+                <Border Grid.Row="1" BorderBrush="{DynamicResource Border}" BorderThickness="0,1,0,0" Background="{DynamicResource Surface2}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{loc:Loc Key=Subagents}" FontWeight="Bold" Padding="12,8" Background="{DynamicResource PanelAltBackgroundBrush}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <Button DockPanel.Dock="Top" Content="{loc:Loc Key=Menu.Refresh}" Command="{Binding LoadSubagentsCommand}" Style="{StaticResource ButtonSecondary}" Padding="6,2" Margin="8,4"/>
+                        <ListBox ItemsSource="{Binding Subagents}" BorderThickness="0" Background="Transparent"
+                                 MaxHeight="180" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2">
+                                        <StackPanel.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{loc:Loc Key=Menu.ViewTranscript}" Command="{Binding PlacementTarget.DataContext.OpenSubagentCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}"/>
+                                                <MenuItem Header="{loc:Loc Key=Menu.Continue}" Command="{Binding PlacementTarget.DataContext.ContinueSubagentCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}"
+                                                          IsEnabled="{Binding IsContinuable}"/>
+                                                <MenuItem Header="{loc:Loc Key=Menu.Interrupt}" Command="{Binding PlacementTarget.DataContext.InterruptSubagentCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding}"/>
+                                            </ContextMenu>
+                                        </StackPanel.ContextMenu>
+                                        <DockPanel>
+                                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,6,0">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="{DynamicResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Running">
+                                                                <Setter Property="Fill" Value="#3B82F6"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Paused">
+                                                                <Setter Property="Fill" Value="#D97706"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="ReadOnly">
+                                                                <Setter Property="Fill" Value="#6B7280"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Interrupted">
+                                                                <Setter Property="Fill" Value="#DC2626"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Terminated">
+                                                                <Setter Property="Fill" Value="#6B7280"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <TextBlock FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center">
+                                                <Run Text="{Binding Label}"/>
+                                            </TextBlock>
+                                        </DockPanel>
+                                        <TextBlock FontSize="11" Foreground="{DynamicResource TextMuted}">
+                                            <Run Text="{Binding StatusKindText}"/>
+                                            <Run Text=" · "/>
+                                            <Run Text="{Binding Mode}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 中间：聊天区 + 作业面板 -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- 拖拽手柄列（阶段3）：此前面板宽度只能在 240/560 两档间切换，
+                     账本表格需要连续可调。GridSplitter 直接改列宽，用 TwoWay
+                     回写 VM，以便持久化与折叠/展开时恢复。 -->
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="{Binding RightPanelWidth, Mode=TwoWay}"/>
+            </Grid.ColumnDefinitions>
+            <!-- 列0：会话标题栏（Dock=Top）+ 聊天内容 -->
+            <Grid Grid.Column="0">
+                <DockPanel>
+                    <!-- 醒目的当前会话标题栏（2026-08-24）：不依赖侧栏高亮，标题区直接展示当前会话 -->
+                <Border DockPanel.Dock="Top" Background="{DynamicResource Surface2}"
+                        BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1"
+                        Padding="14,8" Visibility="{Binding SelectedSessionTitle, Converter={StaticResource StringNotEmptyToVisibility}}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="💬" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding SelectedSessionTitle}" FontWeight="SemiBold" FontSize="14"
+                                   Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"
+                                   MaxWidth="520" VerticalAlignment="Center"
+                                   ToolTip="{Binding SelectedSessionTitle}"/>
+                    </StackPanel>
+                </Border>
+                <ListBox x:Name="TranscriptList" ItemsSource="{Binding Transcript}" BorderThickness="0" Padding="12"
+                         MouseDoubleClick="TranscriptList_MouseDoubleClick"
+                         ToolTip="{loc:Loc Key=Msg.DoubleClickHint}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.IsDeferredScrollingEnabled="True"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         VirtualizingStackPanel.VirtualizationMode="Standard"
+                         HorizontalContentAlignment="Stretch"
+                         ItemTemplate="{StaticResource ChatEntryTemplate}"
+                         local:AutoScrollBehavior.ScrollToEnd="True"
+                         local:AutoScrollBehavior.PauseScrollToEnd="{Binding IsLoadingHistory}">
+                    <!-- 空状态占位（P0）：区分"未选会话"与"已选但该会话尚无内容" -->
+                    <ListBox.Style>
+                        <Style TargetType="ListBox">
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Style>
+                    </ListBox.Style>
+                </ListBox>
+                </DockPanel>
+                <!-- 面板切换按钮（常驻，2026-08-30 修复）：此前此按钮位于被折叠的右面板内部，
+                     点击折叠后按钮随面板一起消失，导致面板再也无法展开。现在常驻在列 0 右上角，
+                     无论面板展开还是折叠都可见可点。字形随面板状态切换（» 展开态 / « 折叠态）。 -->
+                <Button HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,8,0"
+                        FontSize="14" Padding="8,2" Panel.ZIndex="1"
+                        ToolTip="{loc:Loc Key=Tb.TogglePanel}"
+                        Command="{Binding ToggleRightPanelCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource ButtonGhost}">
+                            <Setter Property="Content" Value="«"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding RightPanelVisible}" Value="True">
+                                    <Setter Property="Content" Value="»"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+            <!-- 空状态覆盖层：SelectedSessionId 非空且 Transcript 空时显示"尚无对话内容" -->
+            <Grid Grid.Column="0" IsHitTestVisible="False">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Transcript.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="320">
+                    <!-- U4：图形占位 -->
+                    <Border Width="64" Height="64" HorizontalAlignment="Center"
+                            Background="{DynamicResource Surface2}" CornerRadius="32" Margin="0,0,0,14">
+                        <TextBlock Text="💬" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <TextBlock HorizontalAlignment="Center" Foreground="{DynamicResource TextSecondary}" FontSize="14"
+                               TextWrapping="Wrap" TextAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{loc:Loc Key=EmptySession}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedSessionId}" Value="{x:Null}">
+                                        <Setter Property="Text" Value="{loc:Loc Key=SelectSession}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock HorizontalAlignment="Center" Foreground="{DynamicResource TextMuted}" FontSize="12"
+                               Margin="0,6,0,0" TextWrapping="Wrap" TextAlignment="Center"
+                               Text="{loc:Loc Key=EmptyHint}"/>
+                </StackPanel>
+            </Grid>
+            <!-- H3（P2-5）：本轮产物文件行，点击用默认程序打开。
+                 显隐用 NonEmptyToVisibility（空时不显示条），与空状态文案用的
+                 SearchHitsToVisibility 意图相反 —— 复用错位是早期 bug 的根因。 -->
+            <Border Grid.Column="0" VerticalAlignment="Bottom" Background="{DynamicResource AccentSoft}" BorderBrush="{DynamicResource Accent}"
+                    BorderThickness="1,1,1,0" CornerRadius="6,6,0,0" Padding="8,6"
+                    Visibility="{Binding Deliverables.Count, Converter={StaticResource NonEmptyToVisibility}}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" Text="{loc:Loc Key=ProducedFiles}" FontWeight="SemiBold" FontSize="11"
+                               Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ItemsControl ItemsSource="{Binding Deliverables}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Path}" Padding="8,2" Margin="0,0,6,2" FontSize="11"
+                                        FontFamily="Consolas" Background="{DynamicResource Surface1}" BorderBrush="{DynamicResource Accent}"
+                                        ToolTip="{loc:Loc Key=Deliverable.Open}"
+                                        Command="{Binding DataContext.OpenDeliverableCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentHover}"/>
+                                                    <Setter Property="Background" Value="{DynamicResource AccentSoft}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+            <!-- 拖拽手柄：仅在面板展开时可见（折叠时列宽为 0，手柄无意义） -->
+            <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                          Background="Transparent" ShowsPreview="True"
+                          ResizeDirection="Columns" ResizeBehavior="PreviousAndNext"
+                          DragCompleted="RightPanelSplitter_DragCompleted"
+                          Visibility="{Binding RightPanelVisible, Converter={StaticResource BoolToVisibility}}"/>
+            <Border Grid.Column="2" BorderBrush="{DynamicResource Border}" BorderThickness="1,0,0,0" Background="{DynamicResource Surface2}">
+                <DockPanel>
+                    <TabControl x:Name="RightPanelTabs" BorderThickness="0" Background="Transparent"
+                                SelectionChanged="RightPanelTabs_SelectionChanged">
+                    <TabItem Header="{loc:Loc Key=Tab.Jobs}">
+                        <!-- 空状态：host 只在有子任务运行时推送作业，无任务是正常状态 -->
+                        <Grid>
+                            <TextBlock Style="{StaticResource PanelEmptyState}"
+                                       Text="{loc:Loc Key=Empty.Jobs}"
+                                       Visibility="{Binding Jobs.Count, Converter={StaticResource CountZeroToVisibility}}"/>
+                        <ListBox ItemsSource="{Binding Jobs}" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2">
+                                        <DockPanel>
+                                            <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                     Fill="{Binding Status, Converter={StaticResource JobStatusColor}}"/>
+                                            <TextBlock FontFamily="Consolas" FontSize="12">
+                                                <Run Text="{Binding Label}"/>
+                                                <Run Text="  "/>
+                                                <Run Text="{Binding StatusKindText}" Foreground="{Binding Status, Converter={StaticResource JobStatusColor}}"/>
+                                            </TextBlock>
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding Detail}" Foreground="{DynamicResource TextMuted}" FontSize="11"
+                                                   TextWrapping="Wrap" FontFamily="Consolas" Margin="14,1,0,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="{loc:Loc Key=Tab.Todo}">
+                        <!-- 空状态：host 通过 todo/write 事件推送，未产生待办时为正常状态 -->
+                        <Grid>
+                            <TextBlock Style="{StaticResource PanelEmptyState}"
+                                       Text="{loc:Loc Key=Empty.Todo}"
+                                       Visibility="{Binding Todos.Count, Converter={StaticResource CountZeroToVisibility}}"/>
+                        <ListBox ItemsSource="{Binding Todos}" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <TextBlock FontSize="12">
+                                            <Run Text="{Binding Status}" Foreground="{Binding Status, Converter={StaticResource TodoStatusColor}}"/>
+                                            <Run Text="  "/>
+                                            <Run Text="{Binding Content}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="{loc:Loc Key=Tab.Queue}">
+                        <Grid>
+                            <!-- 空状态：无排队消息是正常状态 -->
+                            <TextBlock Style="{StaticResource PanelEmptyState}"
+                                       Text="{loc:Loc Key=Empty.Queue}"
+                                       Visibility="{Binding QueueItems.Count, Converter={StaticResource CountZeroToVisibility}}"/>
+                        <ListBox ItemsSource="{Binding QueueItems}" BorderThickness="0" Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,2">
+                                        <TextBlock FontSize="11" FontFamily="Consolas" Foreground="{DynamicResource TextMuted}">
+                                            <Run Text="{Binding Placement}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding TextPreview}" FontSize="11" TextWrapping="Wrap"/>
+                                        <!-- H7：编辑 / 严格 steer / 删除（session.updateQueue） -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <Button Content="✏" FontSize="10" Padding="3,0" Margin="0,0,4,0"
+                                                    Command="{Binding DataContext.EditQueueItemCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="{loc:Loc Key=Queue.EditHint}"/>
+                                            <Button Content="⤴" FontSize="10" Padding="3,0" Margin="0,0,4,0"
+                                                    Command="{Binding DataContext.SteerQueueItemCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="{loc:Loc Key=Queue.SteerHint}"/>
+                                            <Button Content="✕" FontSize="10" Padding="3,0"
+                                                    Command="{Binding DataContext.RemoveQueueItemCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="{loc:Loc Key=Queue.RemoveHint}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="{loc:Loc Key=Tab.Trajectory}">
+                        <!-- 原生等价的三件套（packages/client/ui-trajectory）：
+                             工具栏（搜索/折叠/宽度） + 时间轴（点击定位） + 账本表格（虚拟化）
+                             + 详情面板（懒解析）。表格放在 DockPanel 最后以填充剩余空间。 -->
+                        <DockPanel>
+                            <!-- ① 工具栏 -->
+                            <Grid DockPanel.Dock="Top" Margin="4,3,4,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding TrajectorySearchText, UpdateSourceTrigger=PropertyChanged}"
+                                         FontSize="11" Padding="3,1" VerticalContentAlignment="Center"
+                                         ToolTip="{loc:Loc Key=Tr.SearchHint}"/>
+                                <!-- 折叠 turns / 折叠 calls：与原生 "Collapse turns" / "Collapse calls" 对应 -->
+                                <ToggleButton Grid.Column="1" Content="T" FontSize="10" Padding="5,1" Margin="3,0,0,0"
+                                              IsChecked="{Binding TrajectoryCollapseTurns}"
+                                              ToolTip="{loc:Loc Key=Tr.CollapseTurnsHint}"/>
+                                <ToggleButton Grid.Column="2" Content="C" FontSize="10" Padding="5,1" Margin="3,0,0,0"
+                                              IsChecked="{Binding TrajectoryCollapseCalls}"
+                                              ToolTip="{loc:Loc Key=Tr.CollapseCallsHint}"/>
+                                <!-- 面板加宽：账本表格在 240px 下不可读 -->
+                                <Button Grid.Column="3" Content="⇔" FontSize="11" Padding="5,1" Margin="3,0,0,0"
+                                        Command="{Binding TogglePanelWidthCommand}"
+                                        ToolTip="{loc:Loc Key=Tr.WidenHint}"/>
+                                <Button Grid.Column="4" Content="✕" FontSize="10" Padding="5,1" Margin="3,0,0,0"
+                                        Command="{Binding ClearTrajectoryFilterCommand}"
+                                        ToolTip="{loc:Loc Key=Tr.ClearFilterHint}"/>
+                            </Grid>
+                            <!-- 计数/筛选提示 -->
+                            <TextBlock DockPanel.Dock="Top" Text="{Binding TrajectoryFilterHint}" FontSize="10"
+                                       Foreground="{DynamicResource TextMuted}" Margin="6,0,4,2"/>
+
+                            <!-- ② 时间轴（与表格双向联动：点击圆点选中行，选中行高亮圆点） -->
+                            <controls:TrajectoryTimeline DockPanel.Dock="Top" Trajectory="{Binding Trajectory}"
+                                                         FocusIndex="{Binding TrajectoryFocusIndex, Mode=TwoWay}"
+                                                         HorizontalAlignment="Stretch" Height="82" Margin="4,0,4,2"/>
+
+                            <!-- ④ 详情面板（底部；Payload 在首次切到该 Tab 时才序列化） -->
+                            <Expander DockPanel.Dock="Bottom" IsExpanded="{Binding TrajectoryDetailExpanded}"
+                                      Header="{loc:Loc Key=Tr.Details}" MaxHeight="230" Margin="4,0,4,2">
+                                <TabControl FontSize="10" MinHeight="90" BorderThickness="0" Background="Transparent">
+                                    <TabItem Header="{loc:Loc Key=Tr.Summary}">
+                                        <TextBox Text="{Binding TrajectoryDetailSummary, Mode=OneWay}" IsReadOnly="True"
+                                                 FontFamily="Consolas" FontSize="10" TextWrapping="Wrap"
+                                                 VerticalScrollBarVisibility="Auto" BorderThickness="0" Background="Transparent"/>
+                                    </TabItem>
+                                    <TabItem Header="{loc:Loc Key=Tr.Timing}">
+                                        <TextBox Text="{Binding TrajectoryDetailTiming, Mode=OneWay}" IsReadOnly="True"
+                                                 FontFamily="Consolas" FontSize="10" TextWrapping="NoWrap"
+                                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                                 BorderThickness="0" Background="Transparent"/>
+                                    </TabItem>
+                                    <TabItem Header="{loc:Loc Key=Tr.Result}">
+                                        <TextBox Text="{Binding TrajectoryDetailResult, Mode=OneWay}" IsReadOnly="True"
+                                                 FontFamily="Consolas" FontSize="10" TextWrapping="NoWrap"
+                                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                                 BorderThickness="0" Background="Transparent"/>
+                                    </TabItem>
+                                    <TabItem Header="{loc:Loc Key=Tr.Arguments}">
+                                        <TextBox Text="{Binding TrajectoryDetailArguments, Mode=OneWay}" IsReadOnly="True"
+                                                 FontFamily="Consolas" FontSize="10" TextWrapping="NoWrap"
+                                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                                 BorderThickness="0" Background="Transparent"/>
+                                    </TabItem>
+                                    <TabItem Header="{loc:Loc Key=Tr.Payload}">
+                                        <TextBox Text="{Binding TrajectoryDetailPayload, Mode=OneWay}" IsReadOnly="True"
+                                                 FontFamily="Consolas" FontSize="10" TextWrapping="NoWrap"
+                                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                                 BorderThickness="0" Background="Transparent"/>
+                                    </TabItem>
+                                </TabControl>
+                            </Expander>
+
+                            <!-- ③ 账本表格：固定行高 + 虚拟化（长会话仍保持流畅） -->
+                            <ListBox ItemsSource="{Binding TrajectoryRows}"
+                                     SelectedItem="{Binding SelectedTrajectoryRow, Mode=TwoWay}"
+                                     MouseDoubleClick="TrajectoryRows_MouseDoubleClick"
+                                     ToolTip="{loc:Loc Key=Tr.DoubleClickHint}"
+                                     BorderThickness="0" Background="Transparent"
+                                     HorizontalContentAlignment="Stretch"
+                                     ScrollViewer.CanContentScroll="True"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     VirtualizingStackPanel.IsVirtualizing="True"
+                                     VirtualizingStackPanel.VirtualizationMode="Standard"
+                                     local:AutoScrollBehavior.ScrollToEnd="True"
+                                     local:AutoScrollBehavior.PauseScrollToEnd="False">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <!-- 固定行高：虚拟化按像素滚动时行高可变会导致布局反复测量 -->
+                                        <Setter Property="Height" Value="20"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid VerticalAlignment="Center">
+                                            <!-- 按层级缩进：Turn(0) / Request(1) / Step(2) -->
+                                            <Grid.Style>
+                                                <Style TargetType="Grid">
+                                                    <Setter Property="Margin" Value="18,0,4,0"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding RowKind}" Value="TurnHeader">
+                                                            <Setter Property="Margin" Value="2,0,4,0"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding RowKind}" Value="RequestHeader">
+                                                            <Setter Property="Margin" Value="10,0,4,0"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Grid.Style>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <!-- kind / 分组标签 -->
+                                            <TextBlock Grid.Column="0" Text="{Binding Label}" FontFamily="Consolas" FontSize="10"
+                                                       MinWidth="70" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextMuted}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding RowKind}" Value="TurnHeader">
+                                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding RowKind}" Value="RequestHeader">
+                                                                <Setter Property="Foreground" Value="{DynamicResource Accent}"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsError}" Value="True">
+                                                                <Setter Property="Foreground" Value="{DynamicResource Danger}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <!-- 摘要（单行，超出省略） -->
+                                            <TextBlock Grid.Column="1" Text="{Binding Summary}" FontSize="11" Margin="6,0,4,0"
+                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsError}" Value="True">
+                                                                <Setter Property="Foreground" Value="{DynamicResource Danger}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <!-- 时长等次要信息 -->
+                                            <TextBlock Grid.Column="2" Text="{Binding Meta}" FontFamily="Consolas" FontSize="9"
+                                                       Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </TabItem>
+                    <TabItem Header="{loc:Loc Key=Tab.Settings}">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Top" Margin="8,4">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="{loc:Loc Key=Set.Refresh}" Command="{Binding LoadSettingsCommand}" Padding="6,2"
+                                            ToolTip="{loc:Loc Key=Set.RefreshHint}"/>
+                                    <!-- 设置是「主动请求」型数据（settings.describe RPC），不会自动填充，
+                                         未加载时给出提示，避免用户以为界面坏了 -->
+                                    <TextBlock Text="{loc:Loc Key=Empty.Settings}" FontSize="11" Margin="8,0,0,0"
+                                               VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}"
+                                               Visibility="{Binding SettingsEntries.Count, Converter={StaticResource CountZeroToVisibility}}"/>
+                                </StackPanel>
+                                <Separator Margin="0,6"/>
+                                <TextBlock Text="{loc:Loc Key=Set.Credentials}" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,2"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBox Text="{Binding CredentialRef, UpdateSourceTrigger=PropertyChanged}" Width="90" Padding="3"/>
+                                    <PasswordBox x:Name="CredentialPassword" Width="120" Padding="3" Margin="4,0,4,0"
+                                                 PasswordChanged="CredentialPassword_Changed"/>
+                                    <Button Content="{loc:Loc Key=Set.Save}" Command="{Binding SaveCredentialCommand}"/>
+                                </StackPanel>
+                                <Button Content="{loc:Loc Key=Set.LoadCredentials}" Command="{Binding LoadCredentialsCommand}" Padding="6,2" HorizontalAlignment="Left"/>
+                                <ListBox ItemsSource="{Binding CredentialEntries}" BorderThickness="0" Background="Transparent" MaxHeight="90">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <!-- E11：状态点（绿=已配置，红=缺失）+ 引用名 + 状态文本 -->
+                                                <Ellipse Width="8" Height="8" Fill="{Binding StatusBrush}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock FontSize="11" FontFamily="Consolas" Foreground="{DynamicResource TextPrimary}">
+                                                    <Run Text="{Binding Ref}"/><Run Text="  "/><Run Text="{Binding StatusLabel}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Separator Margin="0,6"/>
+                                <TextBlock Text="{loc:Loc Key=Set.DiscoverModels}" FontWeight="SemiBold" FontSize="12" Margin="0,0,0,2"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBox Text="{Binding DiscoverProvider, UpdateSourceTrigger=PropertyChanged}" Width="90" Padding="3"/>
+                                    <Button Content="{loc:Loc Key=Set.Probe}" Command="{Binding DiscoverModelsCommand}" Padding="6,2" Margin="4,0,0,0"/>
+                                </StackPanel>
+                                <ListBox ItemsSource="{Binding DiscoveredModels}" BorderThickness="0" Background="Transparent" MaxHeight="90">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="11" FontFamily="Consolas">
+                                                <Run Text="{Binding Id}"/>
+                                                <Run Text="  "/>
+                                                <Run Text="{Binding ContextWindow, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Separator Margin="0,6"/>
+                            </StackPanel>
+                            <ListBox ItemsSource="{Binding SettingsEntries}" BorderThickness="0" Background="Transparent">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,2">
+                                            <StackPanel.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="{loc:Loc Key=Set.EditCas}" Command="{Binding PlacementTarget.DataContext.EditSettingsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                              CommandParameter="{Binding}"/>
+                                                </ContextMenu>
+                                            </StackPanel.ContextMenu>
+                                            <TextBlock FontFamily="Consolas" FontSize="12" FontWeight="SemiBold">
+                                                <Run Text="{Binding Ns}"/>
+                                                <Run Text="  ("/>
+                                                <Run Text="{Binding Applies}"/>
+                                                <Run Text=", rev="/>
+                                                <Run Text="{Binding Revision}"/>
+                                                <Run Text=")"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding ValuePreview}" Foreground="{DynamicResource TextMuted}" FontSize="10"
+                                                       TextWrapping="Wrap" FontFamily="Consolas"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </TabItem>
+                </TabControl>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    # Dsh.Wpf and Dsh.Viewer target net8.0-windows (WPF + WebView2), so the
+    # build must run on Windows. A Linux runner cannot compile them.
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore
+      run: dotnet restore dsh-wpf-port.slnx
+
+    - name: Build
+      run: dotnet build dsh-wpf-port.slnx --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test dsh-wpf-port.slnx --configuration Release --no-build --verbosity normal

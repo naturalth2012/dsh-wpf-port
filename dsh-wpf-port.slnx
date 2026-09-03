@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Dsh.App.Tests/Dsh.App.Tests.csproj" />
+  <Project Path="Dsh.App/Dsh.App.csproj" />
+  <Project Path="Dsh.Client/Dsh.Client.csproj" />
+  <Project Path="Dsh.Contract.Tests/Dsh.Contract.Tests.csproj" />
+  <Project Path="Dsh.Contract/Dsh.Contract.csproj" />
+  <Project Path="Dsh.Wpf/Dsh.Wpf.csproj" />
+  <Project Path="Dsh.Viewer/Dsh.Viewer.csproj" />
+</Solution>

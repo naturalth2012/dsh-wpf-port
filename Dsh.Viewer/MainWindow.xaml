@@ -1,0 +1,66 @@
+<Window x:Class="Dsh.Viewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:app="clr-namespace:Dsh.App;assembly=Dsh.App"
+        xmlns:local="clr-namespace:Dsh.Viewer"
+        Title="DeepSeek Harness — 会话档案查看器"
+        Height="720" Width="1080"
+        MinHeight="600" MinWidth="900"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 左：按工作区分组的会话树（L2：cwd → sessionId，路径段已解码） -->
+        <DockPanel Grid.Column="0" Margin="0,0,10,0">
+            <Button DockPanel.Dock="Top" Content="打开会话存储目录…" Click="OpenFolder_Click" Margin="0,0,0,8"/>
+            <TextBlock DockPanel.Dock="Top" Text="{Binding FolderPath, Mode=OneWay}" FontSize="11"
+                       Foreground="Gray" TextTrimming="CharacterEllipsis" Margin="0,0,0,6"/>
+            <TreeView ItemsSource="{Binding Workspaces}" SelectedItemChanged="OnTreeSelectionChanged">
+                <TreeView.Resources>
+                    <!-- 工作区节点：文件夹图标 + 解码后的 cwd 标签 -->
+                    <HierarchicalDataTemplate DataType="{x:Type local:WorkspaceNode}"
+                                              ItemsSource="{Binding Sessions}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📁" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding Label}" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                    <!-- 会话节点：气泡图标 + 会话 id（zstd 后缀标注） -->
+                    <DataTemplate DataType="{x:Type local:SessionNode}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="💬" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+        </DockPanel>
+
+        <!-- 右：会话消息行渲染（复用 Dsh.App.SessionFold 折叠） -->
+        <DockPanel Grid.Column="1">
+            <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Margin="0,0,0,6">
+                <Run Text="会话："/>
+                <Run Text="{Binding SelectedNode.DisplayName, Mode=OneWay}"/>
+                <Run Text="  ·  "/>
+                <Run Text="{Binding RowCount, Mode=OneWay}"/>
+                <Run Text=" 行"/>
+            </TextBlock>
+            <ListBox ItemsSource="{Binding Rows}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel Margin="0,2">
+                            <Border DockPanel.Dock="Left" Background="#EEE" CornerRadius="3"
+                                    Padding="4,1" Margin="0,0,6,0">
+                                <TextBlock Text="{Binding Role}" FontSize="10" Foreground="#555"/>
+                            </Border>
+                            <TextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Grid>
+</Window>

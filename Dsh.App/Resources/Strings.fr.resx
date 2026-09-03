@@ -1,0 +1,391 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/Namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType><xsd:choice maxOccurs="unbounded">
+        <xsd:element name="metadata"><xsd:complexType><xsd:sequence><xsd:element name="value" type="xsd:string" minOccurs="0" /></xsd:sequence><xsd:attribute name="name" use="required" type="xsd:string" /><xsd:attribute name="type" type="xsd:string" /><xsd:attribute name="mimetype" type="xsd:string" /><xsd:attribute ref="xml:space" /></xsd:complexType></xsd:element>
+        <xsd:element name="assembly"><xsd:complexType><xsd:attribute name="alias" type="xsd:string" /><xsd:attribute name="name" type="xsd:string" /></xsd:complexType></xsd:element>
+        <xsd:element name="data"><xsd:complexType><xsd:sequence><xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="2" /><xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="3" /></xsd:sequence><xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" /><xsd:attribute name="type" type="xsd:string" msdata:Ordinal="4" /><xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="5" /><xsd:attribute ref="xml:space" /></xsd:complexType></xsd:element>
+        <xsd:element name="resheader"><xsd:complexType><xsd:sequence><xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" /></xsd:sequence><xsd:attribute name="name" type="xsd:string" use="required" /></xsd:complexType></xsd:element>
+      </xsd:choice></xsd:complexType></xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Connect" xml:space="preserve"><value>Connecter</value></data>
+  <data name="Disconnect" xml:space="preserve"><value>Déconnecter</value></data>
+  <data name="Refresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="NewSession" xml:space="preserve"><value>Nouvelle session</value></data>
+  <data name="Rename" xml:space="preserve"><value>Renommer</value></data>
+  <data name="Delete" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="SelectModel" xml:space="preserve"><value>Modèle</value></data>
+  <data name="LoadModels" xml:space="preserve"><value>Recharger les modèles</value></data>
+  <data name="Diagnostics" xml:space="preserve"><value>Diagnostics</value></data>
+  <data name="ToggleTheme" xml:space="preserve"><value>Sombre</value></data>
+  <data name="Status" xml:space="preserve"><value>Statut :</value></data>
+  <data name="Host" xml:space="preserve"><value>Hôte :</value></data>
+  <data name="Subagents" xml:space="preserve"><value>Sous-agents</value></data>
+  <data name="Language" xml:space="preserve"><value>Langue</value></data>
+  <data name="AddWorkspace" xml:space="preserve"><value>Ajouter un espace de travail</value></data>
+  <data name="NewWindow" xml:space="preserve"><value>Nouvelle fenêtre</value></data>
+  <data name="Connected" xml:space="preserve"><value>Connecté</value></data>
+  <data name="Disconnected" xml:space="preserve"><value>Déconnecté</value></data>
+  <data name="Connecting" xml:space="preserve"><value>Connexion…</value></data>
+  <data name="StartService" xml:space="preserve"><value>Démarrer le service</value></data>
+  <data name="StopService" xml:space="preserve"><value>Arrêter le service</value></data>
+  <data name="RefreshStatus" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="OpenWeb" xml:space="preserve"><value>Ouvrir le Web</value></data>
+  <data name="PickDirectory" xml:space="preserve"><value>Choisir le dossier…</value></data>
+  <data name="HarnessDirectory" xml:space="preserve"><value>Dossier deepseek-harness</value></data>
+  <data name="ServiceRunning" xml:space="preserve"><value>En cours</value></data>
+  <data name="ServiceStopped" xml:space="preserve"><value>Arrêté</value></data>
+  <data name="ServiceStarting" xml:space="preserve"><value>Démarrage…</value></data>
+  <data name="ProducedFiles" xml:space="preserve"><value>Fichiers produits</value></data>
+  <data name="Copy" xml:space="preserve"><value>Copier</value></data>
+  <data name="Streaming" xml:space="preserve"><value>Génération…</value></data>
+  <data name="Ai" xml:space="preserve"><value>IA</value></data>
+  <data name="Reasoning" xml:space="preserve"><value>Raisonnement</value></data>
+  <data name="MessageTime" xml:space="preserve"><value>Heure du message</value></data>
+  <data name="MarkUseful" xml:space="preserve"><value>Marquer comme utile</value></data>
+  <data name="MarkImprove" xml:space="preserve"><value>Marquer comme à améliorer</value></data>
+  <data name="EmptySession" xml:space="preserve"><value>Cette session ne contient encore aucun contenu.</value></data>
+  <data name="SelectSession" xml:space="preserve"><value>Sélectionnez une session à gauche pour démarrer.</value></data>
+  <data name="EmptyHint" xml:space="preserve"><value>La conversation s'affichera ici en temps réel après sélection.</value></data>
+  <data name="Workspace" xml:space="preserve"><value>Espace de travail</value></data>
+  <data name="Ungrouped" xml:space="preserve"><value>Non groupé</value></data>
+  <data name="SearchPlaceholder" xml:space="preserve"><value>Rechercher des sessions…</value></data>
+  <data name="Archive" xml:space="preserve"><value>Archiver</value></data>
+  <data name="OpenFolder" xml:space="preserve"><value>Ouvrir le dossier</value></data>
+  <data name="CopyPath" xml:space="preserve"><value>Copier le chemin</value></data>
+  <data name="CopyTitle" xml:space="preserve"><value>Copier le titre</value></data>
+  <data name="Settings" xml:space="preserve"><value>Paramètres</value></data>
+  <data name="GroupConnection" xml:space="preserve"><value>Connexion</value></data>
+  <data name="GroupModel" xml:space="preserve"><value>Modèle</value></data>
+  <data name="GroupAppearance" xml:space="preserve"><value>Apparence</value></data>
+  <data name="GroupData" xml:space="preserve"><value>Données et diagnostic</value></data>
+  <data name="HostLabel" xml:space="preserve"><value>URL de l'hôte</value></data>
+  <data name="CurrentStatus" xml:space="preserve"><value>Statut actuel</value></data>
+  <data name="ModelLabel" xml:space="preserve"><value>Modèle par défaut</value></data>
+  <data name="DiagHint" xml:space="preserve"><value>Les journaux de diagnostic sont exportés dans le dossier du programme puis ouverts dans l'Explorateur.</value></data>
+  <data name="Fold.Turn" xml:space="preserve"><value>— Tour {0} —</value></data>
+  <data name="Fold.FoldError" xml:space="preserve"><value>Échec du repliement de l'événement (ignoré) : {0}</value></data>
+  <data name="Fold.Compaction" xml:space="preserve"><value>⟲ Point de contrôle de compaction du contexte ({0} tokens)</value></data>
+  <data name="Fold.CompactionNoTokens" xml:space="preserve"><value>⟲ Point de contrôle de compaction du contexte</value></data>
+  <data name="Fold.RetryProgress" xml:space="preserve"><value>↻ Nouvelle tentative d'appel LLM (essai {0}/{1}, {2}ms)</value></data>
+  <data name="Fold.RetryProgressNoDelay" xml:space="preserve"><value>↻ Nouvelle tentative d'appel LLM (essai {0}/{1})</value></data>
+  <data name="Fold.RetryAlways" xml:space="preserve"><value>↻ Nouvelle tentative d'appel LLM (always)</value></data>
+  <data name="Fold.Retry" xml:space="preserve"><value>↻ Nouvelle tentative d'appel LLM</value></data>
+  <data name="Fold.TerminalAuth" xml:space="preserve"><value>Échec terminal : clé API invalide</value></data>
+  <data name="Fold.TerminalFailed" xml:space="preserve"><value>Échec terminal</value></data>
+  <data name="Fold.TerminalFailedMessage" xml:space="preserve"><value>Échec terminal : {0}</value></data>
+  <data name="Fold.ContextInjected" xml:space="preserve"><value>Contexte injecté · {0}</value></data>
+  <data name="Fold.ContextInjectedSuffix" xml:space="preserve"><value>(injecté : {0})</value></data>
+  <data name="Fold.ContextLabel" xml:space="preserve"><value>Contexte injecté</value></data>
+  <data name="Fold.OfflineReplay" xml:space="preserve"><value>Hors ligne : affichage du contenu de session en cache</value></data>
+  <data name="Ui.LargeContentSkipped" xml:space="preserve"><value>Contenu trop volumineux ; rendu ignoré pour préserver la réactivité</value></data>
+  <data name="Ui.LargeContentTruncated" xml:space="preserve"><value>Contenu volumineux ({0:N0} caractères) ; replié pour préserver la réactivité.</value></data>
+  <data name="Ui.ViewFullContent" xml:space="preserve"><value>Afficher tout le contenu</value></data>
+  <!-- VM 动态消息 (I3) -->
+  <data name="Notify.ConnectFailed" xml:space="preserve"><value>Échec de la connexion : {0}</value></data>
+  <data name="Notify.RenameFailed" xml:space="preserve"><value>Échec du renommage : {0}</value></data>
+  <data name="Notify.SearchFailed" xml:space="preserve"><value>Échec de la recherche : {0}</value></data>
+  <data name="Notify.CommandCatalogLoadFailed" xml:space="preserve"><value>Le catalogue de commandes n'a pas pu charger, commandes / indisponibles : {0}</value></data>
+  <data name="Notify.FeedbackFailed" xml:space="preserve"><value>Échec de l'enregistrement du retour : {0}</value></data>
+  <data name="Notify.CopyFailed" xml:space="preserve"><value>Échec de la copie : {0}</value></data>
+  <data name="Notify.OpenBrowserFailed" xml:space="preserve"><value>Échec d'ouverture du navigateur : {0}</value></data>
+  <data name="Notify.OpenFailed" xml:space="preserve"><value>Échec d'ouverture : {0}</value></data>
+  <data name="Notify.OpenDeliverableFailed" xml:space="preserve"><value>Échec d'ouverture de l'artefact : {0}</value></data>
+  <data name="Notify.OpenFolderFailed" xml:space="preserve"><value>Échec d'ouverture du dossier : {0}</value></data>
+  <data name="Notify.DiagExportDone" xml:space="preserve"><value>Diagnostics exportés : {0}</value></data>
+  <data name="Notify.DiagExportSummaryOnly" xml:space="preserve"><value>Résumé de diagnostic exporté (aucun journal d'exécution) : {0}</value></data>
+  <data name="Notify.DiagExportFailed" xml:space="preserve"><value>Échec de l'export des diagnostics : {0}</value></data>
+  <data name="Notify.CopySessionPath" xml:space="preserve"><value>Chemin de session copié dans le presse-papiers.</value></data>
+  <data name="Notify.CopySessionTitle" xml:space="preserve"><value>Titre de session copié dans le presse-papiers.</value></data>
+  <data name="Notify.CopyWorkspacePath" xml:space="preserve"><value>Chemin d'espace de travail copié dans le presse-papiers.</value></data>
+  <data name="Notify.ArchiveFailed" xml:space="preserve"><value>Échec de l'archivage de la session : {0}</value></data>
+  <data name="Notify.ForkFailed" xml:space="preserve"><value>Échec du fork de la session : {0}</value></data>
+  <data name="Notify.AddWorkspaceFailed" xml:space="preserve"><value>Échec d'ajout de l'espace de travail : {0}</value></data>
+  <data name="Notify.DeleteWorkspaceFailed" xml:space="preserve"><value>Échec de suppression de l'espace de travail : {0}</value></data>
+  <data name="Notify.SettingsUpdated" xml:space="preserve"><value>Paramètres mis à jour : {0} (rev {1})</value></data>
+  <data name="Notify.SettingsConflictRetry" xml:space="preserve"><value>Les paramètres {0} ont été modifiés ailleurs ; relecture et nouvelle tentative.</value></data>
+  <data name="Notify.EditSettingsFailed" xml:space="preserve"><value>Échec de la modification des paramètres : {0}</value></data>
+  <data name="Notify.ModelSwitched" xml:space="preserve"><value>Modèle basculé vers {0}/{1}</value></data>
+  <data name="Notify.SwitchModelFailed" xml:space="preserve"><value>Échec du changement de modèle : {0}</value></data>
+  <data name="Notify.CreateSessionTimeout" xml:space="preserve"><value>Délai de création de session expiré (l'hôte n'a pas attaché en 60s).</value></data>
+  <data name="Notify.CreateSessionFailed" xml:space="preserve"><value>Échec de création de la session : {0}</value></data>
+  <data name="Notify.SteerInserted" xml:space="preserve"><value>Steer inséré avant le tour actuel.</value></data>
+  <data name="Notify.SentEnqueued" xml:space="preserve"><value>Envoyé ; ajouté à la file d'attente.</value></data>
+  <data name="Notify.MessageRejected" xml:space="preserve"><value>Message non accepté par l'hôte (l'état de la session peut être restreint).</value></data>
+  <data name="Notify.AddImageFailed" xml:space="preserve"><value>Échec d'ajout de l'image : {0}</value></data>
+  <data name="Notify.ImagesAdded" xml:space="preserve"><value>{0} images ajoutées.</value></data>
+  <data name="Notify.ImagesSkipped" xml:space="preserve"><value>{0} ignorées : {1}</value></data>
+  <data name="Notify.ImageFromClipboard" xml:space="preserve"><value>Image ajoutée depuis le presse-papiers.</value></data>
+  <data name="Notify.ApproveFailed" xml:space="preserve"><value>Échec de l'approbation : {0}</value></data>
+  <data name="Notify.RejectFailed" xml:space="preserve"><value>Échec du rejet : {0}</value></data>
+  <data name="Notify.Reconnected" xml:space="preserve"><value>Reconnecté</value></data>
+  <data name="Notify.ConnectionLost" xml:space="preserve"><value>Connexion perdue ; reconnexion…</value></data>
+  <data name="Notify.RpcError" xml:space="preserve"><value>[{0}] {1}</value></data>
+  <data name="Conn.NotConnected" xml:space="preserve"><value>Non connecté</value></data>
+  <data name="Conn.Connecting" xml:space="preserve"><value>Connexion…</value></data>
+  <data name="Conn.Connected" xml:space="preserve"><value>Connecté</value></data>
+  <data name="Conn.ServiceStopped" xml:space="preserve"><value>Service arrêté</value></data>
+  <data name="Conn.CopyMessage" xml:space="preserve"><value>Message copié</value></data>
+  <data name="Conn.PickWorkspaceDir" xml:space="preserve"><value>Choisissez un dossier à ajouter comme espace de travail…</value></data>
+  <data name="Conn.PickCancelled" xml:space="preserve"><value>Sélection du dossier annulée</value></data>
+  <data name="Conn.CreatingSession" xml:space="preserve"><value>Création de la session…</value></data>
+  <data name="Conn.CreateNoWorkspace" xml:space="preserve"><value>Échec de création de la session : aucun espace de travail disponible. Ajoutez-en un ou ouvrez une session.</value></data>
+  <data name="Conn.CreateTimeout" xml:space="preserve"><value>Délai de création de session expiré (l'hôte n'a pas attaché en 60s).</value></data>
+  <data name="Conn.PickModelHint" xml:space="preserve"><value>Choisissez un modèle dans la liste, ou utilisez /model &lt;nom&gt;</value></data>
+  <data name="Conn.Reconnecting" xml:space="preserve"><value>Connexion perdue ; reconnexion…</value></data>
+  <data name="Conn.CopySessionPath" xml:space="preserve"><value>Chemin de session copié.</value></data>
+  <data name="Conn.CopySessionTitle" xml:space="preserve"><value>Titre de session copié.</value></data>
+  <data name="Conn.CopyWorkspacePath" xml:space="preserve"><value>Chemin d'espace de travail copié.</value></data>
+  <data name="Conn.SteerInserted" xml:space="preserve"><value>Steer inséré avant le tour actuel.</value></data>
+  <data name="Conn.SentEnqueued" xml:space="preserve"><value>Envoyé ; mis en file.</value></data>
+  <data name="Conn.MessageRejected" xml:space="preserve"><value>Message non accepté par l'hôte.</value></data>
+  <data name="Conn.Reconnected" xml:space="preserve"><value>Reconnecté</value></data>
+  <data name="Svc.NotDetected" xml:space="preserve"><value>Non détecté</value></data>
+  <data name="Svc.Stopped" xml:space="preserve"><value>Arrêté</value></data>
+  <data name="Svc.NotStarted" xml:space="preserve"><value>Le service DeepSeek Harness n'est pas démarré.</value></data>
+  <data name="Svc.Stopping" xml:space="preserve"><value>Arrêt du service DeepSeek Harness…</value></data>
+  <data name="Svc.StoppedDone" xml:space="preserve"><value>Service DeepSeek Harness arrêté.</value></data>
+  <data name="Svc.PickDirHint" xml:space="preserve"><value>Choisissez d'abord un dossier deepseek-harness valide.</value></data>
+  <data name="Svc.StartPnpmFailed" xml:space="preserve"><value>Échec du démarrage : impossible de lancer pnpm.</value></data>
+  <data name="Svc.Starting" xml:space="preserve"><value>Démarré ; attente de disponibilité du service (le premier démarrage peut compiler)…</value></data>
+  <data name="Svc.Ready" xml:space="preserve"><value>Service prêt.</value></data>
+  <data name="Svc.ReadyConnecting" xml:space="preserve"><value>Service prêt ; connexion…</value></data>
+  <data name="Svc.StartTimeout" xml:space="preserve"><value>Délai d'attente dépassé pour le service ; consultez le journal ou vérifiez pnpm/node.</value></data>
+  <data name="Mode.Running" xml:space="preserve"><value>En cours</value></data>
+  <data name="Mode.Steering" xml:space="preserve"><value>Intervention</value></data>
+  <data name="Mode.Idle" xml:space="preserve"><value>Inactif</value></data>
+  <data name="Send.Send" xml:space="preserve"><value>Envoyer</value></data>
+  <data name="Send.Enqueue" xml:space="preserve"><value>File</value></data>
+  <data name="Model.NotSelected" xml:space="preserve"><value>(aucun)</value></data>
+  <data name="Sess.NewSession" xml:space="preserve"><value>Nouvelle session</value></data>
+  <data name="Sess.NoTitle" xml:space="preserve"><value>(sans titre)</value></data>
+  <data name="Fold.LoadHistoryFailed" xml:space="preserve"><value>Échec du chargement de l'historique : {0}</value></data>
+  <data name="Fold.LoadOlderFailed" xml:space="preserve"><value>Échec du chargement de l'historique antérieur : {0}</value></data>
+  <data name="Fold.SessionEmpty" xml:space="preserve"><value>Historique de session vide : l'hôte a renvoyé 0 événement (HasMore={0}).</value></data>
+  <data name="Fold.UnknownTypes" xml:space="preserve"><value>Types inconnus : {0}. Tous les types : {1}.</value></data>
+  <data name="Fold.AllTypes" xml:space="preserve"><value>Tous les types : {0}.</value></data>
+  <data name="Fold.TranscriptEmpty" xml:space="preserve"><value>{0} événements chargés, {1} repliés ; Transcript vide. {2}</value></data>
+
+  <data name="App.Name" xml:space="preserve"><value>dsh WPF Client</value></data>
+  <data name="Tray.Show" xml:space="preserve"><value>Afficher la fenêtre</value></data>
+  <data name="Tray.Exit" xml:space="preserve"><value>Quitter</value></data>
+  <data name="Preview" xml:space="preserve"><value>Aperçu</value></data>
+  <data name="Html.PreviewTitle" xml:space="preserve"><value>Aperçu HTML</value></data>
+  <data name="Job.Running" xml:space="preserve"><value>Tâche en cours</value></data>
+  <data name="Job.Active" xml:space="preserve"><value>Actif</value></data>
+  <data name="Job.Awaiting" xml:space="preserve"><value>En attente</value></data>
+  <data name="Job.Idle" xml:space="preserve"><value>Inactif</value></data>
+  <data name="Ws.DeleteConfirm" xml:space="preserve"><value>Retirer « {0} » de la liste des espaces de travail ?&#13;&#10;(Seule l'entrée de groupe est supprimée ; le répertoire et les journaux de session sont conservés)</value></data>
+  <data name="Ws.DeleteTitle" xml:space="preserve"><value>Retirer l'espace de travail</value></data>
+  <data name="Svc.PickDirTitle" xml:space="preserve"><value>Sélectionner le répertoire deepseek-harness</value></data>
+  <!-- 右侧面板 Tab -->
+  <data name="Tab.Jobs" xml:space="preserve"><value>Tâches</value></data>
+  <data name="Tab.Todo" xml:space="preserve"><value>À faire</value></data>
+  <data name="Tab.Queue" xml:space="preserve"><value>File</value></data>
+  <data name="Queue.EditTitle" xml:space="preserve"><value>Modifier le message en file</value></data>
+  <data name="Queue.EditPrompt" xml:space="preserve"><value>Nouveau contenu :</value></data>
+  <data name="Queue.EditHint" xml:space="preserve"><value>Modifier</value></data>
+  <data name="Queue.SteerHint" xml:space="preserve"><value>Steer strict</value></data>
+  <data name="Queue.RemoveHint" xml:space="preserve"><value>Supprimer</value></data>
+  <data name="Queue.UpdateFailed" xml:space="preserve"><value>Échec de la mise à jour de l'élément de la file : {0}</value></data>
+  <data name="Tab.Settings" xml:space="preserve"><value>Paramètres</value></data>
+  <!-- 会话/工作区右键菜单 -->
+  <data name="Menu.Rename" xml:space="preserve"><value>Renommer</value></data>
+  <data name="Menu.OpenFolder" xml:space="preserve"><value>Ouvrir le dossier</value></data>
+  <data name="Menu.ForkSession" xml:space="preserve"><value>Dupliquer la session</value></data>
+  <data name="Menu.CopyPath" xml:space="preserve"><value>Copier le chemin</value></data>
+  <data name="Menu.CopyTitle" xml:space="preserve"><value>Copier le titre</value></data>
+  <data name="Menu.Archive" xml:space="preserve"><value>Archiver</value></data>
+  <data name="Menu.Refresh" xml:space="preserve"><value>Actualiser</value></data>
+  <data name="Menu.DeleteWorkspace" xml:space="preserve"><value>Supprimer l'espace de travail</value></data>
+  <!-- 子代理右键菜单 -->
+  <data name="Menu.ViewTranscript" xml:space="preserve"><value>Voir la transcription</value></data>
+  <data name="Menu.Continue" xml:space="preserve"><value>Continuer</value></data>
+  <data name="Menu.Interrupt" xml:space="preserve"><value>Interrompre</value></data>
+  <!-- 子代理状态点 -->
+  <data name="Subagent.Running" xml:space="preserve"><value>En cours</value></data>
+  <data name="Subagent.Paused" xml:space="preserve"><value>En pause</value></data>
+  <data name="Subagent.ReadOnly" xml:space="preserve"><value>Lecture seule</value></data>
+  <data name="Subagent.Interrupted" xml:space="preserve"><value>Interrompu</value></data>
+  <data name="Subagent.Terminated" xml:space="preserve"><value>Terminé</value></data>
+  <data name="Subagent.Idle" xml:space="preserve"><value>Inactif</value></data>
+  <!-- 作业状态（JobUi） -->
+  <data name="Job.Queued" xml:space="preserve"><value>En file</value></data>
+  <data name="Job.Stopping" xml:space="preserve"><value>Arrêt</value></data>
+  <data name="Job.Completed" xml:space="preserve"><value>Terminé</value></data>
+  <data name="Job.Failed" xml:space="preserve"><value>Échec</value></data>
+  <data name="Job.Cancelled" xml:space="preserve"><value>Annulé</value></data>
+  <!-- 凭据状态 -->
+  <data name="Cred.Configured" xml:space="preserve"><value>Configuré</value></data>
+  <data name="Cred.NotConfigured" xml:space="preserve"><value>Non configuré</value></data>
+  <!-- 统计单位 -->
+  <data name="Stats.TurnsUnit" xml:space="preserve"><value> tours</value></data>
+  <data name="Stats.StepsUnit" xml:space="preserve"><value> étapes</value></data>
+  <data name="Stats.TokensUnit" xml:space="preserve"><value> jetons</value></data>
+  <data name="Stats.Counts" xml:space="preserve"><value>{turns} tours · {steps} étapes</value></data>
+  <data name="Stats.Llm" xml:space="preserve"><value>LLM {duration}</value></data>
+  <data name="Stats.ToolCall" xml:space="preserve"><value>Appel d'outil {duration}</value></data>
+  <data name="Stats.TtftAverage" xml:space="preserve"><value>TTFT moyen {duration}</value></data>
+  <data name="Stats.TokensPerSecond" xml:space="preserve"><value>{throughput} tok/s</value></data>
+  <data name="Stats.CacheHit" xml:space="preserve"><value>Hit de cache {percent}%</value></data>
+  <data name="Stats.Tokens" xml:space="preserve"><value>Entrée {input} tok · Sortie {output} tok</value></data>
+  <!-- Composer 输入区 -->
+  <data name="Composer.AddImage" xml:space="preserve"><value>Ajouter une image</value></data>
+  <data name="Composer.ClearImage" xml:space="preserve"><value>Effacer l'image</value></data>
+  <data name="Composer.Attached" xml:space="preserve"><value>Images jointes :</value></data>
+  <data name="Composer.Queue" xml:space="preserve"><value>Mettre en file</value></data>
+  <data name="Composer.Steer" xml:space="preserve"><value>Rediriger</value></data>
+  <data name="Composer.EnterQueueHint" xml:space="preserve"><value>Redirection au runtime (Ctrl+Entrée, C5)</value></data>
+  <data name="Composer.EnterHintBusy" xml:space="preserve"><value>Comportement d'Entrée : occupé → Entrée=File, Ctrl+Entrée=Redirection ; libre → Entrée=Envoyer.</value></data>
+  <data name="Composer.InsertCommand" xml:space="preserve"><value>Cliquer pour insérer la commande</value></data>
+  <!-- 搜索 -->
+  <data name="Search.Title" xml:space="preserve"><value>Rechercher</value></data>
+  <data name="Search.Results" xml:space="preserve"><value>Résultats</value></data>
+  <data name="Search.ClickOpen" xml:space="preserve"><value>Cliquer pour ouvrir cette session</value></data>
+  <!-- 会话悬停卡片 -->
+  <data name="Hover.Session" xml:space="preserve"><value>Session :</value></data>
+  <data name="Hover.Path" xml:space="preserve"><value>Chemin :</value></data>
+  <data name="Hover.Updated" xml:space="preserve"><value>Mis à jour :</value></data>
+  <data name="Hover.Status" xml:space="preserve"><value>Statut :</value></data>
+  <!-- 服务面板 -->
+  <data name="Svc.ChooseDir" xml:space="preserve"><value>Choisir un répertoire…</value></data>
+  <data name="Svc.Start" xml:space="preserve"><value>Démarrer le service</value></data>
+  <data name="Svc.OpenWeb" xml:space="preserve"><value>Ouvrir le Web</value></data>
+  <data name="Svc.Stop" xml:space="preserve"><value>Arrêter le service</value></data>
+  <data name="Svc.PickDir" xml:space="preserve"><value>Sélectionner le répertoire deepseek-harness…</value></data>
+  <!-- 工具栏提示 -->
+  <data name="Tb.Settings" xml:space="preserve"><value>Paramètres</value></data>
+  <data name="Tb.ToggleTopmost" xml:space="preserve"><value>Épingler toujours au-dessus</value></data>
+  <data name="Tb.NewWindow" xml:space="preserve"><value>Ouvrir une seconde fenêtre…</value></data>
+  <!-- 消息区 -->
+  <data name="Msg.ToolArgs" xml:space="preserve"><value>Arguments de l'outil</value></data>
+  <data name="Deliverable.Open" xml:space="preserve"><value>Ouvrir ce fichier</value></data>
+  <!-- 运行日志折叠 -->
+  <data name="Log.Collapse" xml:space="preserve"><value>Réduire</value></data>
+  <data name="Log.Expand" xml:space="preserve"><value>Développer</value></data>
+  <!-- 工具摘要表头 -->
+  <data name="Tool.Mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="Tool.Length" xml:space="preserve"><value>Longueur</value></data>
+  <data name="Tool.Name" xml:space="preserve"><value>Nom</value></data>
+  <data name="Log.Title" xml:space="preserve"><value>Journal de lancement</value></data>
+  <data name="Harness.TogglePanel" xml:space="preserve"><value>Développer/réduire le gestionnaire de service</value></data>
+  <data name="Sb.SessionStats" xml:space="preserve"><value>Statistiques de session (tours/étapes/durée/jetons)</value></data>
+  <data name="Sb.CurrentModel" xml:space="preserve"><value>Modèle actuel</value></data>
+  <data name="Sb.CurrentSession" xml:space="preserve"><value>Session actuelle</value></data>
+  <data name="Sb.ConnectionStatus" xml:space="preserve"><value>État de la connexion</value></data>
+  <data name="Sb.ServiceStatus" xml:space="preserve"><value>État du service</value></data>
+  <data name="Sb.ModelPrefix" xml:space="preserve"><value>Modèle :</value></data>
+  <data name="Sb.SessionPrefix" xml:space="preserve"><value>Session :</value></data>
+  <data name="Tb.TogglePanel" xml:space="preserve"><value>Réduire/développer le panneau droit</value></data>
+  <data name="Tab.Trajectory" xml:space="preserve"><value>Trajectoire</value></data>
+  <data name="Tb.Trajectory" xml:space="preserve"><value>Trajectoire des événements (relecture pas à pas)</value></data>
+  <data name="Tb.TrajectoryHint" xml:space="preserve"><value>P2-6 : événements de session dans l'ordre chronologique</value></data>
+  <data name="Q.AnswerNeeded" xml:space="preserve"><value>Questions à répondre</value></data>
+  <data name="Q.PlanReview" xml:space="preserve"><value>📋 Révision du plan</value></data>
+  <data name="Q.Approve" xml:space="preserve"><value>Approuver</value></data>
+  <data name="Q.Submit" xml:space="preserve"><value>Soumettre les réponses</value></data>
+  <data name="Q.CustomHint" xml:space="preserve"><value>Autre (texte libre, facultatif)</value></data>
+  <data name="Q.ToolPermitPrefix" xml:space="preserve"><value>Outil «</value></data>
+  <data name="Q.ToolPermitSuffix" xml:space="preserve"><value>» demande la permission</value></data>
+  <data name="Q.AllowOnce" xml:space="preserve"><value>Autoriser une fois</value></data>
+  <data name="Q.Reject" xml:space="preserve"><value>Refuser</value></data>
+  <data name="Set.Refresh" xml:space="preserve"><value>Actualiser les paramètres</value></data>
+  <data name="Set.RefreshHint" xml:space="preserve"><value>Relire les derniers paramètres après conflit ; cliquer pour actualiser si modifiés à l'extérieur</value></data>
+  <data name="Set.Credentials" xml:space="preserve"><value>Identifiants</value></data>
+  <data name="Set.Save" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="Set.LoadCredentials" xml:space="preserve"><value>Charger les identifiants</value></data>
+  <data name="Set.DiscoverModels" xml:space="preserve"><value>Découverte de modèles</value></data>
+  <data name="Set.Probe" xml:space="preserve"><value>Explorer</value></data>
+  <data name="Set.EditCas" xml:space="preserve"><value>Modifier (CAS)</value></data>
+  <data name="Sess.MarkedHelpful" xml:space="preserve"><value>Marqué comme utile</value></data>
+  <data name="Sess.MarkedNeedsWork" xml:space="preserve"><value>Marqué comme à améliorer</value></data>
+  <data name="Sess.OpenedInBrowser" xml:space="preserve"><value>Ouvert {0} dans le navigateur</value></data>
+  <data name="Sess.OpenedPath" xml:space="preserve"><value>Ouvert {0}</value></data>
+  <data name="Sess.OpenFolderFailed" xml:space="preserve"><value>Échec de l'ouverture du dossier : {0}</value></data>
+  <data name="Sess.Archived" xml:space="preserve"><value>Session {0} archivée ({1} session(s) dans l'archive)</value></data>
+  <data name="Sess.ArchiveFailed" xml:space="preserve"><value>Échec de l'archivage de la session : {0}</value></data>
+  <data name="Sess.Forking" xml:space="preserve"><value>Duplication de la session {0}…</value></data>
+  <data name="Sess.Forked" xml:space="preserve"><value>Dupliquée, nouvelle session {0}</value></data>
+  <data name="Sess.ForkFailed" xml:space="preserve"><value>Échec de la duplication de la session : {0}</value></data>
+  <data name="Sess.AddedWorkspace" xml:space="preserve"><value>Espace de travail {0} ajouté</value></data>
+  <data name="Sess.WorkspaceExists" xml:space="preserve"><value>L'espace de travail {0} existe déjà, mis au premier plan</value></data>
+  <data name="Sess.AddWorkspaceFailed" xml:space="preserve"><value>Échec de l'ajout de l'espace de travail : {0}</value></data>
+  <data name="Sess.DeletedWorkspace" xml:space="preserve"><value>Espace de travail {0} supprimé</value></data>
+  <data name="Sess.DeleteWorkspaceFailed" xml:space="preserve"><value>Échec de la suppression de l'espace de travail {0}</value></data>
+  <data name="Sess.DeleteWorkspaceError" xml:space="preserve"><value>Échec de la suppression de l'espace de travail : {0}</value></data>
+  <data name="Sess.LoadWorkspaceFailed" xml:space="preserve"><value>Échec du chargement de l'espace de travail : {0}</value></data>
+  <data name="Sess.Untitled" xml:space="preserve"><value>Non groupé</value></data>
+  <data name="Svc.AutoLocated" xml:space="preserve"><value>Répertoire localisé automatiquement : {0}</value></data>
+  <data name="Svc.PickedDirLog" xml:space="preserve"><value>Répertoire de service sélectionné : {0}</value></data>
+  <data name="Svc.PickedNonHarnessLog" xml:space="preserve"><value>Répertoire sélectionné (avec pnpm-workspace.yaml) : {0}</value></data>
+  <data name="Svc.PickedDir" xml:space="preserve"><value>Répertoire sélectionné : {0}</value></data>
+  <data name="Svc.NotHarnessDir" xml:space="preserve"><value>Le répertoire n'a pas de pnpm-workspace.yaml ; peut ne pas être un checkout deepseek-harness : {0}</value></data>
+  <data name="Svc.CancelPick" xml:space="preserve"><value>Sélection du répertoire de service annulée</value></data>
+  <data name="Svc.StopOnExit" xml:space="preserve"><value>Fermeture de l'application, service arrêté</value></data>
+  <data name="Svc.RunningPid" xml:space="preserve"><value>En cours (PID {0})</value></data>
+  <data name="Svc.Running" xml:space="preserve"><value>En cours</value></data>
+  <data name="Svc.RefreshRunningPid" xml:space="preserve"><value>Actualisation : en cours (PID {0})</value></data>
+  <data name="Svc.RefreshRunning" xml:space="preserve"><value>Actualisation : en cours</value></data>
+  <data name="Svc.StartingDir" xml:space="preserve"><value>Démarrage de DeepSeek Harness ({0})…</value></data>
+  <data name="Svc.StartServiceLog" xml:space="preserve"><value>Démarrage du service : pnpm dsh web ({0})</value></data>
+  <data name="Svc.StartPnpmFailedLog" xml:space="preserve"><value>Échec du démarrage : impossible de lancer pnpm</value></data>
+  <data name="Svc.ReadyPid" xml:space="preserve"><value>Service prêt (PID {0}), connexion…</value></data>
+  <data name="Svc.TimeoutNotReady" xml:space="preserve"><value>Délai dépassé : service pas encore prêt</value></data>
+  <data name="Svc.StartFailedMsg" xml:space="preserve"><value>Échec du démarrage : {0}</value></data>
+  <data name="Svc.SearchFoundPlus" xml:space="preserve"><value>{0}+ résultats (tronqués, affinez la recherche)</value></data>
+  <data name="Svc.SearchFound" xml:space="preserve"><value>{0} résultats trouvés</value></data>
+  <data name="Svc.SearchFailed" xml:space="preserve"><value>Recherche échouée : {0}</value></data>
+  <data name="Svc.SkillCategory" xml:space="preserve"><value>Compétence</value></data>
+  <data name="Svc.PresetDefault" xml:space="preserve"><value>Préréglage d'agent par défaut</value></data>
+  <data name="Svc.Preset" xml:space="preserve"><value>Préréglage d'agent</value></data>
+  <data name="Svc.PresetCategory" xml:space="preserve"><value>Préréglage</value></data>
+  <data name="Svc.SwitchModelCmd" xml:space="preserve"><value>Changer de modèle (/model &lt;nom&gt;)</value></data>
+  <data name="Svc.Local" xml:space="preserve"><value>Local</value></data>
+  <data name="Msg.ExpandMore" xml:space="preserve"><value>Développer plus ({0} blocs)…</value></data>
+  <data name="Msg.OpenLocally" xml:space="preserve"><value>Ouvrir localement</value></data>
+  <data name="Html.Unavailable" xml:space="preserve"><value>Aperçu HTML indisponible : {0}</value></data>
+  <data name="Tray.ConnectedTitle" xml:space="preserve"><value>Connecté</value></data>
+  <data name="Tray.Reconnected" xml:space="preserve"><value>Reconnecté au harness.</value></data>
+  <data name="Tray.ApprovalTitle" xml:space="preserve"><value>Approbation requise</value></data>
+  <data name="Tray.ApprovalBodyTool" xml:space="preserve"><value>L'outil « {0} » demande une autorisation.</value></data>
+  <data name="Tray.ApprovalBodyReason" xml:space="preserve"><value>L'outil « {0} » demande une autorisation : {1}</value></data>
+  <data name="Html.MdPreviewTitle" xml:space="preserve"><value>Aperçu Markdown</value></data>
+  <data name="Connect.EditUrlTitle" xml:space="preserve"><value>Configurer la connexion</value></data>
+  <data name="Connect.EditUrlPrompt" xml:space="preserve"><value>URL du service deepseek-harness :</value></data>
+  <data name="Connect.Edit" xml:space="preserve"><value>Configurer la connexion</value></data>
+  <data name="Connect.Current" xml:space="preserve"><value>URL de connexion actuelle</value></data>
+  <data name="Harness.ServiceName" xml:space="preserve"><value>DeepSeek Harness</value></data>
+  <data name="Tr.SearchHint" xml:space="preserve"><value>Rechercher dans la trajectoire (type / texte / id d'appel)</value></data>
+  <data name="Tr.CollapseTurnsHint" xml:space="preserve"><value>Replier les tours : afficher uniquement les en-têtes Turn</value></data>
+  <data name="Tr.CollapseCallsHint" xml:space="preserve"><value>Replier les appels : masquer les lignes d'outils</value></data>
+  <data name="Tr.WidenHint" xml:space="preserve"><value>Basculer la largeur du panneau (le registre a besoin de place)</value></data>
+  <data name="Tr.ClearFilterHint" xml:space="preserve"><value>Effacer la recherche et le repli</value></data>
+  <data name="Tr.Details" xml:space="preserve"><value>Détails</value></data>
+  <data name="Tr.Summary" xml:space="preserve"><value>Résumé</value></data>
+  <data name="Tr.Payload" xml:space="preserve"><value>Charge utile</value></data>
+  <data name="Tr.Timing" xml:space="preserve"><value>Chronologie</value></data>
+  <data name="Empty.Jobs" xml:space="preserve"><value>Aucune tâche active</value></data>
+  <data name="Empty.Todo" xml:space="preserve"><value>Aucun élément à faire</value></data>
+  <data name="Empty.Queue" xml:space="preserve"><value>Aucun message en file d'attente</value></data>
+  <data name="Empty.Settings" xml:space="preserve"><value>Pas encore chargé — cliquez sur Actualiser</value></data>
+  <data name="Tr.Result" xml:space="preserve"><value>Résultat</value></data>
+  <data name="Tr.Arguments" xml:space="preserve"><value>Arguments</value></data>
+  <data name="Msg.DetailTitle" xml:space="preserve"><value>Détail du message — {0}</value></data>
+  <data name="Tr.DetailTitle" xml:space="preserve"><value>Détail de l'étape — {0}</value></data>
+  <data name="Msg.DoubleClickHint" xml:space="preserve"><value>Double-cliquez sur un message pour voir son contenu complet dans une fenêtre distincte</value></data>
+  <data name="Tr.DoubleClickHint" xml:space="preserve"><value>Double-cliquez sur une étape pour voir tous les détails</value></data>
+  <data name="Html.CopyMarkdown" xml:space="preserve"><value>Copier le Markdown</value></data>
+  <data name="Html.CopyText" xml:space="preserve"><value>Copier le texte brut</value></data>
+  <data name="Html.SaveAs" xml:space="preserve"><value>Enregistrer sous…</value></data>
+  <data name="Html.Copied" xml:space="preserve"><value>Copié</value></data>
+  <data name="Msg.ReasoningSection" xml:space="preserve"><value>Processus de raisonnement (Reasoning)</value></data>
+  <data name="Msg.ReasoningNote" xml:space="preserve"><value>Brouillon de réflexion interne du modèle — ne fait pas partie de la réponse finale.</value></data>
+  <data name="Html.CopyPageText" xml:space="preserve"><value>Copier le texte de la page</value></data>
+  <data name="Html.RevealInFolder" xml:space="preserve"><value>Afficher dans le dossier</value></data>
+</root>
