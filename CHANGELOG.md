@@ -9,9 +9,23 @@
 
 ---
 
-## [Unreleased]
+## [0.2.0-alpha] — 2026-09-03
 
-暂无。
+第二次公开 alpha 发布。在 `v0.1.0-alpha` 基础上补全 `Dsh.Viewer`（L0–L4 离线会话查看器）、6 语言 UI 全面覆盖与文档高亮。
+
+> ⚠️ **alpha 状态说明**：功能完整度较高，但仍有未实现项与已知限制（见下文及 README「Known limitations / 已知限制」）。
+> **请勿视为生产就绪（stable）。**
+
+### 主要变更（自 v0.1.0-alpha）
+
+- **`Dsh.Viewer` 补全至 L0–L4**：新增离线 `.jsonl`/`.zstd` 会话查看器的富渲染、会话内检索、统计与 Markdown/JSONL 导出；`ChunkRowExpander` / `LoadSelected` / `SessionFold` 复用三项缺陷修复。
+- **应用图标**：新增 `Dsh.Viewer/Assets/app-icon.{png,ico}`，`.ico` 编译进 exe。
+- **国际化全面接入**：Viewer 复用 `Dsh.App` 共享 `Strings` resx（zh/en/fr/de/es/ko），含导出对话框/消息框/截断标记等全部用户文案；TranscriptExporter 亦本地化。
+- **会话标题显示**：`SessionNode` 默认显示唯一短 id；从 `session/title` 事件捕获真实标题并刷新树与 header。
+- **自动加载默认目录**：启动时自动尝试 `%DSH_HOME%/sessions`、`~/.dsh/sessions`。
+- **零配置后端（文档高亮）**：README 明确「指向 `deepseek-harness` 检出目录即可自动 `pnpm install` + `build` + 启动 + 连接」的自动初始化流程。
+- **依赖清理**：移除未使用的 `CommunityToolkit.Mvvm` 包与 `Dsh.Contract` 项目引用。
+- **测试**：新增 `Dsh.Viewer.Tests` 54 个用例 → 总计 **367 个测试用例**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 54）。
 
 ---
 
