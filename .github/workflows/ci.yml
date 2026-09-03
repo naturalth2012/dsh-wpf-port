@@ -28,5 +28,13 @@ jobs:
     - name: Build
       run: dotnet build dsh-wpf-port.slnx --configuration Release --no-restore
 
+    # Test only the three test projects explicitly. Running `dotnet test dsh-wpf-port.slnx`
+    # pulls Dsh.Wpf into the VSTest target's dependency graph and on some runners its
+    # `VSTest` target can fail with exit code 1 / 0 errors / 0 warnings (a known msbuild
+    # symptom when the WPF host project's IsTestProject=false but the test target is
+    # still evaluated). Restricting to the test projects avoids that false negative.
     - name: Test
-      run: dotnet test dsh-wpf-port.slnx --configuration Release --no-build --verbosity normal
+      run: |
+        dotnet test Dsh.Contract.Tests/Dsh.Contract.Tests.csproj --configuration Release --no-build --verbosity normal
+        dotnet test Dsh.App.Tests/Dsh.App.Tests.csproj        --configuration Release --no-build --verbosity normal
+        dotnet test Dsh.Viewer.Tests/Dsh.Viewer.Tests.csproj  --configuration Release --no-build --verbosity normal
