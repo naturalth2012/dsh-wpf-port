@@ -25,11 +25,15 @@ dotnet run --project Dsh.Wpf
 # 运行本地存储查看器（离线浏览会话数据）
 dotnet run --project Dsh.Viewer
 
-# 测试
-dotnet test dsh-wpf-port.slnx
+# 测试（按测试项目逐个运行，见下方说明）
+dotnet test Dsh.Contract.Tests/Dsh.Contract.Tests.csproj
+dotnet test Dsh.App.Tests/Dsh.App.Tests.csproj
+dotnet test Dsh.Viewer.Tests/Dsh.Viewer.Tests.csproj
 ```
 
 > **注意**：`dotnet run` 不会自动热重载。重新构建前请先关闭正在运行的 `Dsh.Wpf.exe`，否则会因 DLL 被锁定而构建失败（MSB3027）。
+>
+> **注意**：请用上面的逐项目方式运行测试。`dotnet test dsh-wpf-port.slnx` 会把非测试项目 `Dsh.Wpf` 拉进 VSTest 目标，在部分环境下以「0 错误 / 0 警告」误报失败。CI 同样采用逐项目调用，见 `.github/workflows/ci.yml`。
 
 ### 指定 harness 目录
 
@@ -80,7 +84,7 @@ UI 字符串**不要硬编码**。请加到 `Dsh.App/Resources/*.resx`（现有 
 
 ## 4. 测试
 
-- 测试项目：`Dsh.App.Tests`、`Dsh.Contract.Tests`（当前 **313 个用例**）。
+- 测试项目：`Dsh.App.Tests`（218）、`Dsh.Contract.Tests`（95）、`Dsh.Viewer.Tests`（55），当前共 **368 个用例**。
 - **契约测试请基于真实 wire fixture**，不要用 mock —— 这能真正捕获上游协议变更（见 `Dsh.Contract.Tests/WireFormatTests.cs`）。
 - 提交前请确保：`dotnet test` 全部通过，且 `dotnet build` 无警告。
 

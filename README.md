@@ -53,7 +53,11 @@ It is **not 100% equivalent**. Canvas timeline interaction, Todo/Queue dock writ
 dotnet build dsh-wpf-port.slnx      # build
 dotnet run --project Dsh.Wpf        # run the desktop client
 dotnet run --project Dsh.Viewer     # run the local storage viewer
-dotnet test dsh-wpf-port.slnx       # test
+
+# test — run each test project explicitly
+dotnet test Dsh.Contract.Tests/Dsh.Contract.Tests.csproj
+dotnet test Dsh.App.Tests/Dsh.App.Tests.csproj
+dotnet test Dsh.Viewer.Tests/Dsh.Viewer.Tests.csproj
 ```
 
 On first launch, pick your `deepseek-harness` directory in the **Service** panel. Alternatively set the `DSH_HARNESS_DIR` environment variable; the client also probes `~/deepseek-harness` and `~/dsh/deepseek-harness`.
@@ -61,6 +65,8 @@ On first launch, pick your `deepseek-harness` directory in the **Service** panel
 **Backend auto-setup.** The client needs a running `deepseek-harness` host. On first launch it detects a fresh checkout (missing `apps/web/dist`), runs `pnpm install` + `pnpm run build`, launches `pnpm dsh web` on `http://127.0.0.1:3080`, polls until the gateway answers, then auto-connects. You only choose the directory once.
 
 > **Note**: `dotnet run` does not hot-reload. Close the running `Dsh.Wpf.exe` before rebuilding, otherwise the build fails with MSB3027 (locked DLLs).
+>
+> **Note**: run `dotnet test` per test project. `dotnet test dsh-wpf-port.slnx` pulls `Dsh.Wpf` (a non-test project) into the VSTest target and can report a false failure with `0 errors / 0 warnings`.
 
 ### Project structure
 
@@ -75,7 +81,7 @@ os/             Development process documentation (Chinese) — see os/README.md
 
 ### Tests
 
-**367 tests passing** (`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 54).
+**368 tests passing** (`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 55).
 
 Contract tests are written against **real wire fixtures** rather than mocks, so upstream protocol changes are caught early.
 
@@ -160,7 +166,11 @@ WPF 客户端覆盖 Web 客户端的**绝大部分**面向用户功能，并在 
 dotnet build dsh-wpf-port.slnx      # 构建
 dotnet run --project Dsh.Wpf        # 运行桌面客户端
 dotnet run --project Dsh.Viewer     # 运行本地存储查看器
-dotnet test dsh-wpf-port.slnx       # 测试
+
+# 测试 —— 按测试项目逐个运行
+dotnet test Dsh.Contract.Tests/Dsh.Contract.Tests.csproj
+dotnet test Dsh.App.Tests/Dsh.App.Tests.csproj
+dotnet test Dsh.Viewer.Tests/Dsh.Viewer.Tests.csproj
 ```
 
 首次运行时在「服务」面板中选择 `deepseek-harness` 目录。也可设置 `DSH_HARNESS_DIR` 环境变量；客户端还会探测 `~/deepseek-harness` 与 `~/dsh/deepseek-harness`。
@@ -168,6 +178,8 @@ dotnet test dsh-wpf-port.slnx       # 测试
 **后端自动初始化。** 客户端需要一个运行中的 `deepseek-harness` 宿主。首次启动时会检测全新检出（缺少 `apps/web/dist`），自动执行 `pnpm install` + `pnpm run build`，在 `http://127.0.0.1:3080` 启动 `pnpm dsh web`，轮询直至网关响应后自动连接。你只需指定一次目录。
 
 > **注意**：`dotnet run` 不会热重载。重新构建前请先关闭正在运行的 `Dsh.Wpf.exe`，否则会因 DLL 被锁定而构建失败（MSB3027）。
+>
+> **注意**：`dotnet test` 请按测试项目逐个运行。`dotnet test dsh-wpf-port.slnx` 会把非测试项目 `Dsh.Wpf` 拉进 VSTest 目标，在部分环境下以「0 错误 / 0 警告」误报失败。
 
 ### 项目结构
 
@@ -182,7 +194,7 @@ os/             开发过程文档（中文）—— 见 os/README.md
 
 ### 测试
 
-**367 个用例通过**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 54）。
+**368 个用例通过**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 55）。
 
 契约测试基于**真实 wire fixture** 而非 mock，因此能及时捕获上游协议变更。
 

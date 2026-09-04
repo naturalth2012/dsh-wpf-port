@@ -9,6 +9,20 @@
 
 ---
 
+## [0.2.2-alpha] — 2026-09-04
+
+公开修正发布：**无功能变更**，仅测试夹具去标识化与文档校正。
+
+### 修正
+
+- **测试夹具去标识化**：`Dsh.Viewer.Tests/SessionPathResolverTests.cs` 中残留的内部目录名与项目代号，替换为中性示例（`D-Archive-工作`）。测试语义与断言逻辑不变，用例数不受影响。
+- **测试用例数校正**：`README.md` 与 `CONTRIBUTING.md` 更新为实测值 **368**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 55）。此前 `CONTRIBUTING.md` 仍写着陈旧的 313 且漏列 `Dsh.Viewer.Tests`。
+- **测试命令更正**：`README.md` / `CONTRIBUTING.md` 的 Quick Start 由 `dotnet test dsh-wpf-port.slnx` 改为**按测试项目逐个运行**。前者会把非测试项目 `Dsh.Wpf` 拉进 VSTest 目标，在部分环境下以「0 错误 / 0 警告」误报失败（CI 已于 `v0.2.1-alpha` 修正，本次同步到文档）。
+
+> 📌 `v0.2.0-alpha` 条目中记录的 367（Viewer 54）是**当时的准确值**，不作回溯改写。
+
+---
+
 ## [0.2.1-alpha] — 2026-09-03
 
 `v0.2.0-alpha` 修复补丁：修正 `Dsh.Viewer.Tests.SessionPathResolverTests.DecodeSegment_matches_observed_real_encodings` 的 InlineData（hex 字面量与按 UTF-16 code unit 解码的实现不匹配，导致 GitHub CI 失败）。改为 4 位 ASCII BMP 字面量，CI 现已通过。

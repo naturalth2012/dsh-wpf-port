@@ -15,7 +15,7 @@ public class SessionPathResolverTests
     // ── DecodeSegment ──────────────────────────────────────────────────────────────────────────
 
     [Theory]
-    [InlineData("D-AIWork-~89C2~5984~5F55", "D-AIWork-观妄录")]
+    [InlineData("D-Archive-~5DE5~4F5C", "D-Archive-工作")]
     [InlineData("D-github", "D-github")]
     [InlineData("", "")]
     [InlineData("plain-ascii-123", "plain-ascii-123")]
@@ -28,7 +28,7 @@ public class SessionPathResolverTests
     public void DecodeSegment_handles_multiple_consecutive_escapes()
     {
         // ~XXXX encodes a single UTF-16 code unit; consecutive escapes decode consecutive chars.
-        Assert.Equal("创作", SessionPathResolver.DecodeSegment("~521B~4F5C"));
+        Assert.Equal("工作", SessionPathResolver.DecodeSegment("~5DE5~4F5C"));
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class SessionPathResolverTests
         try
         {
             // workspace segment (encoded cwd), with a decoded label containing a non-ASCII char.
-            string wsDir = Path.Combine(root, "--D-AIWork-~89C2~5984~5F55--");
+            string wsDir = Path.Combine(root, "--D-Archive-~5DE5~4F5C--");
             string s1Dir = Path.Combine(wsDir, "session-aaa");
             string s2Dir = Path.Combine(wsDir, "session-bbb");
             Directory.CreateDirectory(s1Dir);
@@ -94,7 +94,7 @@ public class SessionPathResolverTests
             var entries = SessionPathResolver.Scan(root).ToList();
 
             Assert.Equal(2, entries.Count);
-            Assert.All(entries, e => Assert.Equal("D-AIWork-观妄录", e.Workspace));
+            Assert.All(entries, e => Assert.Equal("D-Archive-工作", e.Workspace));
             var plain = entries.Single(e => e.Path.EndsWith("session.jsonl"));
             Assert.False(plain.IsZstd);
             Assert.Equal("session-aaa", plain.SessionId);
@@ -131,7 +131,7 @@ public class SessionPathResolverTests
         string root = MakeTempRoot();
         try
         {
-            foreach (var (seg, label) in new[] { ("--D-github--", "D-github"), ("--D-AIWork-~89C2~5984~5F55--", "D-AIWork-观妄录") })
+            foreach (var (seg, label) in new[] { ("--D-github--", "D-github"), ("--D-Archive-~5DE5~4F5C--", "D-Archive-工作") })
             {
                 string wsDir = Path.Combine(root, seg);
                 string sDir = Path.Combine(wsDir, "session-x");
@@ -139,7 +139,7 @@ public class SessionPathResolverTests
                 File.WriteAllText(Path.Combine(sDir, "session.jsonl"), "{}\n");
             }
             var entries = SessionPathResolver.Scan(root).ToList();
-            Assert.Equal(new[] { "D-AIWork-观妄录", "D-github" },
+            Assert.Equal(new[] { "D-Archive-工作", "D-github" },
                 entries.Select(e => e.Workspace).OrderBy(x => x));
         }
         finally
