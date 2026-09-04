@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using Dsh.App;
+using Dsh.App.Services;
 using Dsh.Viewer;
 
 namespace Dsh.Viewer.Tests;
@@ -38,6 +39,32 @@ public class SurfaceItemTests
     {
         var item = new SurfaceItem(new SessionFold.Row(role, "x"), 0);
         Assert.Equal(expected, item.RoleLabel);
+    }
+
+    /// <summary>
+    /// Regression guard for the v0.2.2-alpha CI failure: role labels resolve through the resource
+    /// set, so the host's ambient UI culture changes the answer, and the zh-CN fallback in
+    /// <see cref="Dsh.App.Strings.Get"/> never kicks in for English because Strings.en.resx is
+    /// complete. A windows-latest runner therefore produced "Tool" where the assertions above pin
+    /// "工具". Both branches are selected explicitly here, so this test is culture-independent and
+    /// documents the trap rather than depending on <see cref="TestCultureDefaults"/>.
+    /// </summary>
+    [Fact]
+    public void RoleLabel_follows_the_explicit_language_not_the_host_culture()
+    {
+        var row = new SessionFold.Row("tool", "x");
+        try
+        {
+            Localization.SetLanguage("en");
+            Assert.Equal("Tool", new SurfaceItem(row, 0).RoleLabel);
+
+            Localization.SetLanguage("zh-CN");
+            Assert.Equal("工具", new SurfaceItem(row, 0).RoleLabel);
+        }
+        finally
+        {
+            Localization.SetLanguage("zh-CN");
+        }
     }
 
     [Fact]

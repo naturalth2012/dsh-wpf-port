@@ -84,7 +84,8 @@ UI 字符串**不要硬编码**。请加到 `Dsh.App/Resources/*.resx`（现有 
 
 ## 4. 测试
 
-- 测试项目：`Dsh.App.Tests`（218）、`Dsh.Contract.Tests`（95）、`Dsh.Viewer.Tests`（55），当前共 **368 个用例**。
+- 测试项目：`Dsh.App.Tests`（218）、`Dsh.Contract.Tests`（95）、`Dsh.Viewer.Tests`（56），当前共 **369 个用例**。
+- **断言本地化文案时，必须显式设置语言**（`Localization.SetLanguage("zh-CN")`），不要依赖运行环境。`Localization` 的初始文化取自 `CultureInfo.CurrentUICulture`，而该值随宿主机变化：中文 Windows 是 `zh-CN`，GitHub Actions 的 `windows-latest` runner 是 `en-US`。由于 `Strings.en.resx` 是完整的，英文会被直接解析而**不会**回退到 zh-CN —— 依赖环境的断言会在 CI 上红、本地却全绿。
 - **契约测试请基于真实 wire fixture**，不要用 mock —— 这能真正捕获上游协议变更（见 `Dsh.Contract.Tests/WireFormatTests.cs`）。
 - 提交前请确保：`dotnet test` 全部通过，且 `dotnet build` 无警告。
 

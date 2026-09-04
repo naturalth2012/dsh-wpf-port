@@ -9,6 +9,22 @@
 
 ---
 
+## [0.2.3-alpha] — 2026-09-04
+
+`v0.2.2-alpha` 的 CI 修复补丁：**无功能变更**，仅修正测试对宿主区域性的隐式依赖。
+
+### 修正
+
+- **修复 CI 上 `Dsh.Viewer.Tests` 5 个用例失败**：`Localization` 的初始文化取自 `CultureInfo.CurrentUICulture`，该值随宿主变化（中文 Windows 为 `zh-CN`，GitHub Actions `windows-latest` 为 `en-US`）。由于 `Strings.en.resx` 完整，英文会被直接解析而不回退 zh-CN，导致写死中文断言的用例（`SurfaceItemTests.RoleLabel_maps_known_and_unknown_roles` 的 4 条数据、`TranscriptExporterTests.Markdown_contains_user_and_assistant_sections`）在 CI 上失败、本地却全绿。
+  - `Dsh.Viewer.Tests/AssemblyInfo.cs` 增加模块初始化器，在任何测试运行前将 UI 文化固定为 `zh-CN`，使「默认 zh-CN」这一既有假设在**任何** runner 上都成立。
+  - 新增守卫用例 `RoleLabel_follows_the_explicit_language_not_the_host_culture`：显式切换 `en` / `zh-CN` 并双向断言，本身不依赖环境，同时把这个坑记录在测试里。
+  - `CONTRIBUTING.md` 补上纪律：断言本地化文案时必须显式设置语言。
+- **测试用例数校正**：368 → **369**（`Dsh.Viewer.Tests` 55 → 56）。
+
+> 📌 对比参考：`Dsh.App.Tests` 的每个文化相关用例都在开头显式调用 `Localization.SetLanguage(...)`，因此在 CI 上始终通过 —— 本次修复是把同样的纪律提升到 `Dsh.Viewer.Tests` 的程序集级别。
+
+---
+
 ## [0.2.2-alpha] — 2026-09-04
 
 公开修正发布：**无功能变更**，仅测试夹具去标识化与文档校正。

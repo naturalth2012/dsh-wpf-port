@@ -81,7 +81,7 @@ os/             Development process documentation (Chinese) — see os/README.md
 
 ### Tests
 
-**368 tests passing** (`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 55).
+**369 tests passing** (`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 56).
 
 Contract tests are written against **real wire fixtures** rather than mocks, so upstream protocol changes are caught early.
 
@@ -194,7 +194,7 @@ os/             开发过程文档（中文）—— 见 os/README.md
 
 ### 测试
 
-**368 个用例通过**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 55）。
+**369 个用例通过**（`Dsh.App.Tests` 218 + `Dsh.Contract.Tests` 95 + `Dsh.Viewer.Tests` 56）。
 
 契约测试基于**真实 wire fixture** 而非 mock，因此能及时捕获上游协议变更。
 
