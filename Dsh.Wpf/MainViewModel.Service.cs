@@ -502,11 +502,7 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     private void AppendHarnessLogLineMarshalled(string line)
     {
-        var dispatcher = System.Windows.Application.Current?.Dispatcher;
-        if (dispatcher is not null && dispatcher.CheckAccess() is false)
-            _ = dispatcher.InvokeAsync(() => AppendHarnessLogLine(line));
-        else
-            AppendHarnessLogLine(line);
+        DispatcherExtensions.MarshalOnAppThreadAsync(() => AppendHarnessLogLine(line));
     }
 
     /// <summary>Persist current preferences (harness directory, gateway URL, composer Enter action).</summary>

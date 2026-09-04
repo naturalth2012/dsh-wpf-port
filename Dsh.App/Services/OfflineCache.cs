@@ -40,7 +40,7 @@ public sealed class OfflineCache
     /// <summary>Persist the latest successful workspace + session snapshot (best-effort).</summary>
     public static void Save(WorkspaceView[] workspaces, SessionSummary[] sessions, string? path = null)
     {
-        try
+        TryCacheOp(() =>
         {
             var file = path ?? DefaultPath;
             var dir = Path.GetDirectoryName(file)!;
@@ -52,21 +52,13 @@ public sealed class OfflineCache
                 Sessions = sessions,
             };
             File.WriteAllText(file, JsonSerializer.Serialize(snapshot, Options));
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
-                                     or NotSupportedException or ArgumentException or System.Security.SecurityException)
-        {
-            // Cache is best-effort: a write failure must not break the live refresh. Only
-            // filesystem/serialization failures are expected here; anything else (a real bug)
-            // is deliberately left unhandled so it surfaces instead of being silently swallowed.
-            System.Diagnostics.Debug.WriteLine($"[OfflineCache] save failed: {ex.Message}");
-        }
+        });
     }
 
     /// <summary>Load a previously-saved snapshot, or null when none/unreadable/stale exists.</summary>
     public static Snapshot? TryLoad(string? path = null)
     {
-        try
+        return TryCacheOp(() =>
         {
             var file = path ?? DefaultPath;
             if (!File.Exists(file)) return null;
@@ -76,14 +68,7 @@ public sealed class OfflineCache
             var age = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - snapshot.SavedAt;
             if (age > MaxAgeMs) return null;
             return snapshot;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
-                                     or NotSupportedException or ArgumentException or System.Security.SecurityException)
-        {
-            // Cache is best-effort: an unreadable/corrupt cache is treated as "no cache".
-            System.Diagnostics.Debug.WriteLine($"[OfflineCache] load failed: {ex.Message}");
-            return null;
-        }
+        });
     }
 
     /// <summary>Snapshots older than this are treated as absent (stale offline data).</summary>
@@ -115,7 +100,7 @@ public sealed class OfflineCache
     /// <summary>Persist the last successful history page for a session (best-effort).</summary>
     public static void SaveHistory(string sessionId, System.Text.Json.JsonElement[] events)
     {
-        try
+        TryCacheOp(() =>
         {
             var file = HistoryPath(sessionId);
             var dir = Path.GetDirectoryName(file)!;
@@ -126,19 +111,13 @@ public sealed class OfflineCache
                 Events = events,
             };
             File.WriteAllText(file, JsonSerializer.Serialize(snapshot, Options));
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
-                                     or NotSupportedException or ArgumentException or System.Security.SecurityException)
-        {
-            // Cache is best-effort: an unreadable/corrupt cache is treated as "no cache".
-            System.Diagnostics.Debug.WriteLine($"[OfflineCache] save failed: {ex.Message}");
-        }
+        });
     }
 
     /// <summary>Load a session's cached history, or null when none/unreadable/stale exists.</summary>
     public static HistorySnapshot? TryLoadHistory(string sessionId)
     {
-        try
+        return TryCacheOp(() =>
         {
             var file = HistoryPath(sessionId);
             if (!File.Exists(file)) return null;
@@ -147,12 +126,30 @@ public sealed class OfflineCache
             var age = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - snapshot.SavedAt;
             if (age > MaxAgeMs) return null;
             return snapshot;
-        }
+        });
+    }
+
+    // ---- 辅助方法 -------------------------------------------------------------
+
+    /// <summary>Execute a cache operation with best-effort error handling.</summary>
+    private static void TryCacheOp(Action action)
+    {
+        try { action(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
                                      or NotSupportedException or ArgumentException or System.Security.SecurityException)
         {
-            // Cache is best-effort: an unreadable/corrupt cache is treated as "no cache".
-            System.Diagnostics.Debug.WriteLine($"[OfflineCache] load failed: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[OfflineCache] op failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>Execute a cache operation with best-effort error handling and a return value.</summary>
+    private static T? TryCacheOp<T>(Func<T?> action) where T : class
+    {
+        try { return action(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
+                                     or NotSupportedException or ArgumentException or System.Security.SecurityException)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OfflineCache] op failed: {ex.Message}");
             return null;
         }
     }

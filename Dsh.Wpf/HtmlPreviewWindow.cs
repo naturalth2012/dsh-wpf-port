@@ -235,15 +235,7 @@ public sealed class HtmlPreviewWindow : Window
     public static void Open(string title, string html, Window? owner = null)
     {
         var window = new HtmlPreviewWindow(title, html) { Owner = owner ?? System.Windows.Application.Current.MainWindow };
-        if (Application.Current.Dispatcher.CheckAccess())
-        {
-            window.ShowDialog();
-        }
-        else
-        {
-            var local = window;
-            Application.Current.Dispatcher.Invoke(() => local.ShowDialog());
-        }
+        Application.Current.Dispatcher.Marshal(() => window.ShowDialog());
     }
 
     /// <summary>
@@ -263,14 +255,6 @@ public sealed class HtmlPreviewWindow : Window
         {
             Owner = owner ?? Application.Current.MainWindow,
         };
-        if (Application.Current.Dispatcher.CheckAccess())
-        {
-            window.ShowDialog();
-        }
-        else
-        {
-            var local = window;
-            Application.Current.Dispatcher.Invoke(() => local.ShowDialog());
-        }
+        Application.Current.Dispatcher.Marshal(() => window.ShowDialog());
     }
 }

@@ -5,7 +5,7 @@
     <!-- ============ 通用转换器（主题样式中需复用，集中定义） ============ -->
     <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
     <local:NullToVisibilityConverter x:Key="NullToVisibility"/>
-    <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+    <local:BoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
 
     <!-- ============ 通用常量 ============ -->
     <CornerRadius x:Key="CornerRadiusS">4</CornerRadius>

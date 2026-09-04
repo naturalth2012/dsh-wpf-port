@@ -23,18 +23,18 @@
         <local:TodoStatusColorConverter x:Key="TodoStatusColor"/>
         <local:CountToVisibilityConverter x:Key="SearchHitsToVisibility"/>
         <local:NonEmptyToVisibilityConverter x:Key="NonEmptyToVisibility"/>
-        <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+        <local:BoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
 
         <local:TimestampConverter x:Key="Timestamp"/>
-        <local:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        <local:BoolConverter x:Key="InverseBoolConverter"/>
         <local:BoolToColorConverter x:Key="BoolToColor"/>
         <local:BoolToTextConverter x:Key="BoolToText"/>
         <local:NotificationColorConverter x:Key="NotificationColor"/>
         <local:ComposerStateColorConverter x:Key="ComposerStateColor"/>
         <local:ToolCardTemplateSelector x:Key="ToolCardSelector"/>
-        <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibility"/>
+        <local:BoolToVisibilityConverter x:Key="EmptyStringToVisibility"/>
         <local:StringNotEmptyToBoolConverter x:Key="StringNotEmptyToBool"/>
-        <local:StringNotEmptyToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
+        <local:BoolToVisibilityConverter x:Key="StringNotEmptyToVisibility"/>
         <local:ValueEqualsMultiConverter x:Key="ValueEquals"/>
         <!-- 空状态：集合 Count==0 时显示占位文案。右侧面板多个 Tab 依赖 host 推送，
              无数据时是正常状态（例如当前没有子任务/排队消息）；没有占位文案会让
@@ -498,7 +498,7 @@
                 <StackPanel>
                     <!-- LaunchStatus 为空时隐藏，避免服务未启动时目录上方出现空行 -->
                     <TextBlock Text="{Binding LaunchStatus}" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondary}" Margin="0,0,0,6"
-                               Visibility="{Binding LaunchStatus, Converter={StaticResource EmptyStringToVisibility}}"/>
+                               Visibility="{Binding LaunchStatus, Converter={StaticResource EmptyStringToVisibility}, ConverterParameter=notEmpty}"/>
 
                     <!-- 未构建提示：checkout 存在但 apps/web-dist 缺失。点击按钮执行 pnpm install + build 后启动 -->
                     <Border Margin="0,0,0,6" Background="{DynamicResource WarningSoft}" BorderBrush="{DynamicResource Warning}" BorderThickness="1" CornerRadius="4" Padding="8,6"
@@ -516,7 +516,7 @@
                                 IsEnabled="{Binding ServiceRunning}"/>
                         <Button DockPanel.Dock="Right" Content="{loc:Loc Key=RefreshStatus}" Command="{Binding RefreshHarnessStatusCommand}" Style="{StaticResource ButtonSecondary}" Padding="12,5" Margin="8,0,0,0"/>
                         <Button DockPanel.Dock="Right" Content="{loc:Loc Key=StartService}" Command="{Binding StartHarnessCommand}" Style="{StaticResource ButtonPrimary}" Padding="16,5"
-                                IsEnabled="{Binding IsLaunching, Converter={StaticResource InverseBoolConverter}}"/>
+                                IsEnabled="{Binding IsLaunching, Converter={StaticResource InverseBoolConverter}, ConverterParameter=invert}"/>
                         <Button DockPanel.Dock="Right" Content="{loc:Loc Key=PickDirectory}" Command="{Binding PickHarnessDirectoryCommand}" Style="{StaticResource ButtonSecondary}" Padding="12,5" Margin="8,0,0,0"/>
                         <TextBox Text="{Binding HarnessDirectory}" IsReadOnly="True" Padding="4" VerticalContentAlignment="Center"
                                  ToolTip="{loc:Loc Key=HarnessDirectory}" Style="{StaticResource TextBoxReadOnly}"/>
@@ -593,7 +593,7 @@
                                 Visibility="{Binding HasRichStats, Converter={StaticResource BoolToVisibility}}">
                         <!-- 上下文占用 ring：圆章显示百分比（无 pressure 投影时隐藏）；悬停显示精确 token 数 -->
                         <Border Width="26" Height="26" CornerRadius="13" Background="{DynamicResource AccentSoft}"
-                                Visibility="{Binding StatsRingText, Converter={StaticResource EmptyStringToVisibility}}"
+                                Visibility="{Binding StatsRingText, Converter={StaticResource EmptyStringToVisibility}, ConverterParameter=notEmpty}"
                                 ToolTip="{Binding StatsRingTooltip}">
                             <TextBlock Text="{Binding StatsRingText}" Foreground="{DynamicResource Accent}"
                                        FontWeight="Bold" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -607,7 +607,7 @@
                     <!-- 文本回退：无投影（host 未推送）时显示纯文本旧格式；二者互斥由 HasRichStats 覆盖。 -->
                     <TextBlock DockPanel.Dock="Right" Text="{Binding SessionStatsText}"
                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" Margin="12,0,0,0" FontSize="11"
-                               Visibility="{Binding HasRichStats, Converter={StaticResource InverseBoolToVisibility}}"
+                               Visibility="{Binding HasRichStats, Converter={StaticResource InverseBoolToVisibility}, ConverterParameter=invert}"
                                ToolTip="{loc:Loc Key=Sb.SessionStats}"/>
                     <TextBlock DockPanel.Dock="Right" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center" Margin="12,0,0,0" ToolTip="{loc:Loc Key=Sb.CurrentModel}">
                         <Run Text="{loc:Loc Key=Sb.ModelPrefix}"/><Run Text="{Binding ModelLabel}"/>
@@ -649,7 +649,7 @@
                                         </StackPanel>
                                     </Border>
                                     <!-- Ordinary question affordance (hidden for plan-review) -->
-                                    <StackPanel Margin="0,4" Visibility="{Binding IsPlanReview, Converter={StaticResource InverseBoolToVisibility}}">
+                                    <StackPanel Margin="0,4" Visibility="{Binding IsPlanReview, Converter={StaticResource InverseBoolToVisibility}, ConverterParameter=invert}">
                                         <TextBlock Text="{Binding Question}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                         <ItemsControl ItemsSource="{Binding Options}">
                                             <ItemsControl.ItemTemplate>
@@ -840,7 +840,7 @@
                                 </TextBox.InputBindings>
                             </TextBox>
                             <Border Padding="6,3" Background="{DynamicResource DangerBackground}" BorderBrush="{DynamicResource Danger}" BorderThickness="0,1,0,0"
-                                    Visibility="{Binding IsRoutable, Converter={StaticResource InverseBoolToVisibility}}">
+                                    Visibility="{Binding IsRoutable, Converter={StaticResource InverseBoolToVisibility}, ConverterParameter=invert}">
                                 <TextBlock Text="{Binding RoutableMessage}" Foreground="{DynamicResource Danger}" FontSize="11" TextWrapping="Wrap"/>
                             </Border>
                         </StackPanel>
@@ -1103,7 +1103,7 @@
                     <!-- 醒目的当前会话标题栏（2026-08-24）：不依赖侧栏高亮，标题区直接展示当前会话 -->
                 <Border DockPanel.Dock="Top" Background="{DynamicResource Surface2}"
                         BorderBrush="{DynamicResource Border}" BorderThickness="0,0,0,1"
-                        Padding="14,8" Visibility="{Binding SelectedSessionTitle, Converter={StaticResource StringNotEmptyToVisibility}}">
+                        Padding="14,8" Visibility="{Binding SelectedSessionTitle, Converter={StaticResource StringNotEmptyToVisibility}, ConverterParameter=notEmpty}">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="💬" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding SelectedSessionTitle}" FontWeight="SemiBold" FontSize="14"

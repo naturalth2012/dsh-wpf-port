@@ -56,7 +56,7 @@ public partial class MainViewModel : ObservableObject
         string sessionId = SelectedSessionId;
         ModelChoices.Clear();
 
-        try
+        await SafeExecuteAsync(async () =>
         {
             var result = await _sessions.GetModels(sessionId);
             // Stale-session guard: the user may have switched to another session (including a
@@ -110,12 +110,7 @@ public partial class MainViewModel : ObservableObject
             RoutableMessage = result.Routable
                 ? ""
                 : "当前会话没有可路由的模型（无 provider 路由）。请在设置中配置 provider 并恢复路由。";
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"加载模型失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "加载模型失败");
     }
 
     [RelayCommand]
@@ -125,7 +120,7 @@ public partial class MainViewModel : ObservableObject
         string parentSessionId = SelectedSessionId;
         Subagents.Clear();
 
-        try
+        await SafeExecuteAsync(async () =>
         {
             var catalog = await _sessions.ListSubagents(parentSessionId);
             // Stale-session guard: ignore subagents that arrived after the user switched away.
@@ -134,12 +129,7 @@ public partial class MainViewModel : ObservableObject
             {
                 Subagents.Add(SubagentNodeUi.From(entry, parentSessionId));
             }
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"加载子代理失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "加载子代理失败");
     }
 
     /// <summary>Load all settings namespaces into the settings panel (read-only MVP view).</summary>
@@ -147,7 +137,7 @@ public partial class MainViewModel : ObservableObject
     private async Task LoadSettingsAsync()
     {
         SettingsEntries.Clear();
-        try
+        await SafeExecuteAsync(async () =>
         {
             var result = await _sessions.DescribeSettings();
             foreach (var ns in result.Namespaces)
@@ -157,12 +147,7 @@ public partial class MainViewModel : ObservableObject
                     : "(无值)";
                 SettingsEntries.Add(new SettingsEntry(ns.Ns, ns.Applies, ns.Revision, valuePreview));
             }
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"加载设置失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "加载设置失败");
     }
 
     /// <summary>Edit a settings path with CAS retry: on settings-conflict, re-read and retry.</summary>
@@ -221,19 +206,14 @@ public partial class MainViewModel : ObservableObject
     {
         DiscoveredModels.Clear();
         if (string.IsNullOrWhiteSpace(DiscoverProvider)) return;
-        try
+        await SafeExecuteAsync(async () =>
         {
             var result = await _sessions.DiscoverModels("llm", DiscoverProvider.Trim(), baseUrl: null, api: null);
             foreach (var model in result.Models)
             {
                 DiscoveredModels.Add(model);
             }
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"模型探测失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "模型探测失败");
     }
 
     /// <summary>Load credential status for the known refs (values never cross this wire).</summary>
@@ -241,7 +221,7 @@ public partial class MainViewModel : ObservableObject
     private async Task LoadCredentialsAsync()
     {
         CredentialEntries.Clear();
-        try
+        await SafeExecuteAsync(async () =>
         {
             var refs = new List<string> { CredentialRef };
             var result = await _sessions.DescribeCredentials(refs);
@@ -249,12 +229,7 @@ public partial class MainViewModel : ObservableObject
             {
                 CredentialEntries.Add(CredentialEntry.From(refName, view));
             }
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"加载凭据失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "加载凭据失败");
     }
 
     /// <summary>Save a credential from the password box (write-only; never read back).</summary>
@@ -262,19 +237,14 @@ public partial class MainViewModel : ObservableObject
     private async Task SaveCredentialAsync()
     {
         if (string.IsNullOrWhiteSpace(CredentialRef) || string.IsNullOrWhiteSpace(CredentialValue)) return;
-        try
+        await SafeExecuteAsync(async () =>
         {
             await _sessions.SetCredential(CredentialRef.Trim(), CredentialValue.Trim());
             CredentialValue = "";
             _fold.Rows.Add(new SessionFold.Row("system", $"已保存凭据：{CredentialRef.Trim()}"));
             SyncFoldToUi();
             await LoadCredentialsAsync();
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"保存凭据失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "保存凭据失败");
     }
 
     /// <summary>Open a subagent's transcript (fold its events into the chat surface).</summary>
@@ -283,7 +253,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (node is null || node.IsDiagnostic) return;
 
-        try
+        await SafeExecuteAsync(async () =>
         {
             var history = await _sessions.GetSubagentHistory(node.ParentSessionId, node.Id, node.Mode);
             _fold.Rows.Add(new SessionFold.Row("system", $"—— 子代理 {node.Label} transcript ——"));
@@ -296,12 +266,7 @@ public partial class MainViewModel : ObservableObject
                 }
             }
             SyncFoldToUi();
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"加载子代理失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "加载子代理失败");
     }
 
     /// <summary>Continue a continuable subagent with a user message.</summary>
@@ -314,7 +279,7 @@ public partial class MainViewModel : ObservableObject
         var dialog = new InputDialog("续写子代理", $"向 {node.Label} 发送：") { Owner = Application.Current.MainWindow };
         if (dialog.ShowDialog() != true || string.IsNullOrWhiteSpace(dialog.Text)) return;
 
-        try
+        await SafeExecuteAsync(async () =>
         {
             var receipt = await _sessions.PromptSubagent(
                 node.ParentSessionId,
@@ -324,12 +289,7 @@ public partial class MainViewModel : ObservableObject
             _fold.Rows.Add(new SessionFold.Row("user", dialog.Text.Trim()));
             _fold.Rows.Add(new SessionFold.Row("system", $"已发送给子代理 {node.Label}"));
             SyncFoldToUi();
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"续写失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "续写失败");
     }
 
     /// <summary>Interrupt a running subagent.</summary>
@@ -337,17 +297,12 @@ public partial class MainViewModel : ObservableObject
     private async Task InterruptSubagentAsync(SubagentNodeUi? node)
     {
         if (node is null || node.IsDiagnostic) return;
-        try
+        await SafeExecuteAsync(async () =>
         {
             await _sessions.InterruptSubagent(node.ParentSessionId, node.Id, node.Mode);
             _fold.Rows.Add(new SessionFold.Row("system", $"已发送中断：{node.Label}"));
             SyncFoldToUi();
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"中断失败：{ex.Message}"));
-            SyncFoldToUi();
-        }
+        }, "中断失败");
     }
 
     [RelayCommand]
@@ -365,20 +320,14 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        try
+        await SafeExecuteAsync(async () =>
         {
             var result = await _sessions.SelectModel(SelectedSessionId, choice.Provider, choice.Model);
             ModelLabel = result.Selected.Model;
             _fold.Rows.Add(new SessionFold.Row("system", $"模型已切换为 {result.Selected.Provider}/{result.Selected.Model}"));
             NotifySuccessKey("Notify.ModelSwitched", result.Selected.Provider, result.Selected.Model);
             SyncFoldToUi();
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"切换模型失败：{ex.Message}"));
-            NotifyErrorKey("Notify.SwitchModelFailed", ex.Message);
-            SyncFoldToUi();
-        }
+        }, "切换模型失败");
     }
 
     [RelayCommand]
@@ -745,7 +694,7 @@ public partial class MainViewModel : ObservableObject
     private async Task ApplyModelChoiceAsync(ModelChoice choice)
     {
         if (SelectedSessionId is null) return;
-        try
+        await SafeExecuteAsync(async () =>
         {
             var result = await _sessions.SelectModel(SelectedSessionId, choice.Provider, choice.Model);
             SelectedModelId = choice.Id;
@@ -753,13 +702,7 @@ public partial class MainViewModel : ObservableObject
             _fold.Rows.Add(new SessionFold.Row("system", $"模型已切换为 {result.Selected.Provider}/{result.Selected.Model}"));
             NotifySuccessKey("Notify.ModelSwitched", result.Selected.Provider, result.Selected.Model);
             SyncFoldToUi();
-        }
-        catch (Exception ex)
-        {
-            _fold.Rows.Add(new SessionFold.Row("error", $"切换模型失败：{ex.Message}"));
-            NotifyErrorKey("Notify.SwitchModelFailed", ex.Message);
-            SyncFoldToUi();
-        }
+        }, "切换模型失败");
     }
 
     /// <summary>Count of images attached to the next prompt (for the composer label).</summary>
@@ -889,5 +832,36 @@ public partial class MainViewModel : ObservableObject
     {
         _pendingImages.Clear();
         PendingImageCount = 0;
+    }
+
+    // ---- 辅助方法 -------------------------------------------------------------
+
+    /// <summary>
+    /// Execute an async action with a single try-catch that surfaces errors as fold rows.
+    /// Replaces the repetitive try-catch pattern used in most right-panel commands.
+    /// </summary>
+    private async Task SafeExecuteAsync(Func<Task> action, string errorPrefix)
+    {
+        try { await action(); }
+        catch (Exception ex)
+        {
+            _fold.Rows.Add(new SessionFold.Row("error", $"{errorPrefix}：{ex.Message}"));
+            SyncFoldToUi();
+        }
+    }
+
+    /// <summary>
+    /// Execute an async action with a single try-catch that surfaces errors as fold rows.
+    /// Returns the result, or default(T) on failure.
+    /// </summary>
+    private async Task<T?> SafeExecuteAsync<T>(Func<Task<T>> action, string errorPrefix)
+    {
+        try { return await action(); }
+        catch (Exception ex)
+        {
+            _fold.Rows.Add(new SessionFold.Row("error", $"{errorPrefix}：{ex.Message}"));
+            SyncFoldToUi();
+            return default;
+        }
     }
 }

@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Dsh.App;
 using Dsh.App.Services;
 using Localization = Dsh.App.Services.Localization;
@@ -17,7 +18,7 @@ namespace Dsh.Viewer;
 /// <summary>
 /// Local-storage viewer shell (I-domain). L0 baseline replays <c>.jsonl</c>/<c>.json</c> files
 /// through <see cref="SessionFold"/>; L1 (2026-08-24) adds SessionPathResolver / ZstdReader /
-/// ChunkRowExpander for zstd + chunk-row decode. L2 (this file) groups the scanned sessions
+/// ChunkRowExpander / ChunkRowExpander for zstd + chunk-row decode. L2 (this file) groups the scanned sessions
 /// into a workspace → session tree using <see cref="SessionPathResolver.Scan"/>, so the left
 /// pane reflects the on-disk layout (cwd → sessionId) instead of a flat file list. L3 (2026-09-03)
 /// renders the right pane as a rich Surface view (<see cref="MessageRowControl"/> + Markdown via
@@ -532,7 +533,7 @@ public sealed class WorkspaceNode
 }
 
 /// <summary>One decoded session node in the L2 tree (points at the on-disk session file).</summary>
-public sealed class SessionNode : INotifyPropertyChanged
+public sealed partial class SessionNode : ObservableObject
 {
     public SessionNode(string path, string workspace, string sessionId, bool isZstd)
     {
@@ -556,13 +557,8 @@ public sealed class SessionNode : INotifyPropertyChanged
     /// </summary>
     public string ShortId => SessionId.Length > 16 ? SessionId[..16] : SessionId;
 
+    [ObservableProperty]
     private string _displayName;
-    /// <summary>Tree label: the real session title once known (from session/title), else the short id.</summary>
-    public string DisplayName
-    {
-        get => _displayName;
-        private set { _displayName = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName))); }
-    }
 
     /// <summary>Set from a session/title event discovered during load; refreshes the tree label.</summary>
     public void SetTitle(string? title)
@@ -570,6 +566,4 @@ public sealed class SessionNode : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(title)) return;
         DisplayName = title.Trim();
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 }

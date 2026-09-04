@@ -247,12 +247,12 @@ public sealed class ConnectionScope : IDisposable
     private void RaiseConnectionState(bool up)
     {
         var dispatcher = Application.Current?.Dispatcher;
-        if (dispatcher is null || dispatcher.CheckAccess())
+        if (dispatcher is null)
         {
             ConnectionStateChanged?.Invoke(up);
             return;
         }
-        _ = dispatcher.BeginInvoke(new Action(() => ConnectionStateChanged?.Invoke(up)));
+        dispatcher.MarshalAsync(() => ConnectionStateChanged?.Invoke(up));
     }
 
     private async Task ReadMuxLoop(CancellationToken ct, int generation, string baseUrl)

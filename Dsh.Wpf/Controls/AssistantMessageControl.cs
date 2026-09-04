@@ -123,18 +123,26 @@ public sealed partial class AssistantMessageControl : UserControl
         }
         catch (Exception ex)
         {
-            try
-            {
-                _root.Children.Clear();
-                _root.Children.Add(BuildPlainLine(text));
-                _renderedText = text;
-                _incrementalTail = false;
-            }
-            catch
-            {
-                // 连降级都失败则保持现状，至少不扩散异常到视觉树构建。
-            }
-            System.Diagnostics.Debug.WriteLine($"[AssistantMessageControl] Rebuild fallback: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[AssistantMessageControl] RebuildCore failed, falling back: {ex.Message}");
+            if (TryFallbackToPlainText(text, canAppend)) return;
+            // 降级失败：保持现状，至少不扩散异常到视觉树构建。
+        }
+    }
+
+    private bool TryFallbackToPlainText(string text, bool canAppend)
+    {
+        try
+        {
+            _root.Children.Clear();
+            _root.Children.Add(BuildPlainLine(text));
+            _renderedText = text;
+            _incrementalTail = false;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[AssistantMessageControl] Fallback also failed: {ex.Message}");
+            return false;
         }
     }
 
@@ -294,7 +302,7 @@ public sealed partial class AssistantMessageControl : UserControl
                 _root.Children.Remove(panel);
                 _root.Children.Add(full);
             }
-            catch { /* 渲染失败则保持门状态 */ }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[AMC] RebuildCore failed: {ex.Message}"); }
         };
         panel.Children.Add(btn);
         return panel;
@@ -459,7 +467,7 @@ public sealed partial class AssistantMessageControl : UserControl
                             text: allLines[i]));
                     }
                 }
-                catch { /* 展开失败则保持已渲染部分 */ }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[AMC] ExpandCollapse failed: {ex.Message}"); }
             };
             panel.Children.Add(expand);
         }
@@ -643,7 +651,7 @@ public sealed partial class AssistantMessageControl : UserControl
                     // 本地多页站点是其本职能力。
                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
             }
-            catch { /* 文件不可用或预览失败则忽略 */ }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[AMC] File link open failed: {ex.Message}"); }
         };
         return link;
     }
@@ -804,7 +812,7 @@ public sealed partial class AssistantMessageControl : UserControl
         copy.Click += (_, _) =>
         {
             try { System.Windows.Clipboard.SetText(b.Text ?? ""); }
-            catch { /* 剪贴板不可用时忽略 */ }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[AMC] Clipboard copy failed: {ex.Message}"); }
         };
         DockPanel.SetDock(copy, Dock.Right);
         header.Children.Add(copy);
@@ -1066,137 +1074,5 @@ public sealed partial class AssistantMessageControl : UserControl
         if (mono) tb.FontFamily = MonospaceFont;
         if (text != null) tb.Text = text;
         return tb;
-    }
-}
-
-/// <summary>
-/// 自绘控件内 Markdown 链接 / H4 文件提及的打开逻辑：文件走 MainViewModel.OpenFileCommand，
-/// 普通链接用系统浏览器打开（与既有 OpenWeb 一致）。
-/// </summary>
-public static class MdNavigate
-{
-    public static void Open(string? target, bool isFile)
-    {
-        if (string.IsNullOrWhiteSpace(target)) return;
-        var vm = Application.Current.MainWindow?.DataContext as MainViewModel;
-        if (isFile)
-        {
-            // Resolve relative paths (e.g. "today_date.txt" returned by the AI) against the
-            // session cwd or harness root so that Process.Start and host.openPath both see
-            // a real absolute path. Without this, the harness spawns PowerShell in its own
-            // cwd and the file is never found.
-            var sessionCwd = vm is null
-                ? null
-                : vm.Sessions.FirstOrDefault(s => s.Id == vm.SelectedSessionId)?.Cwd;
-            target = FilePathResolver.Resolve(target, sessionCwd, vm?.HarnessDirectory);
-
-            // HTML 文件：用系统默认浏览器打开（2026-09-02）。
-            //
-            // 这里原先是 File.ReadAllText + HtmlPreviewWindow 内嵌 WebView2 预览，
-            // 但这是用户点击 HTML 链接的主要入口，而该路径长期显示空白：
-            // WebView2 的 data: 源无法承载完整 HTML 页面（script/css/相对资源
-            // 全部失败）。历经 file:///、虚拟主机映射等多种修复均未奏效，
-            // 而系统浏览器打开同一文件始终正常（用户实测）。
-            //
-            // 与 BuildFileLink（裸文本 .html 链接）和围栏 HTML 块的"预览"
-            // 按钮统一：一律走系统浏览器，行为一致且可靠。
-            if (IsHtmlPath(target))
-            {
-                try
-                {
-                    if (OpenLocally(target)) return;
-                }
-                catch
-                {
-                    // 打开失败，回退到系统打开。
-                }
-                FallbackOpen(target);
-                return;
-            }
-            // 建议4d: 其他文件（txt/office/pdf 等）——先尝试本地默认应用直接打开，
-            // 不依赖 host.openPath；失败时回退到 VM 的 host.openPath。
-            if (OpenLocally(target)) return;
-            if (vm is not null)
-            {
-                vm.OpenFileCommand.Execute(target);
-            }
-            return;
-        }
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(target) { UseShellExecute = true });
-        }
-        catch
-        {
-            // 非法 URL 不应导致崩溃。
-        }
-    }
-
-    private static bool IsHtmlPath(string path)
-            => path.EndsWith(".html", System.StringComparison.OrdinalIgnoreCase)
-               || path.EndsWith(".htm", System.StringComparison.OrdinalIgnoreCase);
-
-    private static void FallbackOpen(string target)
-    {
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(target) { UseShellExecute = true });
-        }
-        catch { /* ignore */ }
-    }
-
-    /// <summary>Open a local file with the OS default app. Returns true when the launch succeeded.</summary>
-    private static bool OpenLocally(string path)
-    {
-        try
-        {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-}
-
-/// <summary>
-/// Resolve a possibly-relative file path to an absolute one using known cwds.
-/// The host's <c>openPath</c> uses the harness cwd, but the AI sometimes returns
-/// paths relative to whatever subdirectory the tool ran in (e.g. <c>today_date.txt</c>).
-/// Try the current session's cwd first (most accurate), then the harness root,
-/// then the WPF process cwd. If none match, leave the path as-is so the caller can
-/// surface the underlying error instead of guessing.
-/// </summary>
-internal static class FilePathResolver
-{
-    public static string Resolve(string? path, string? sessionCwd, string? harnessRoot)
-    {
-        if (string.IsNullOrWhiteSpace(path)) return path ?? string.Empty;
-        if (System.IO.Path.IsPathRooted(path)) return path;
-
-        // Order matters: session cwd is the most likely match (the AI's tool cwd),
-        // harness root is the next most common, then process cwd.
-        var candidates = new[]
-        {
-            sessionCwd,
-            harnessRoot,
-            Environment.CurrentDirectory,
-        };
-
-        foreach (var root in candidates)
-        {
-            if (string.IsNullOrWhiteSpace(root)) continue;
-            try
-            {
-                var combined = System.IO.Path.GetFullPath(System.IO.Path.Combine(root, path));
-                if (System.IO.File.Exists(combined)) return combined;
-            }
-            catch
-            {
-                // Bad path chars / unreachable volume — skip this candidate.
-            }
-        }
-        return path;
     }
 }

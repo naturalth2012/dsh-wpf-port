@@ -17,6 +17,16 @@ public sealed class HarnessLauncher
     /// <summary>Default loopback gateway base URL of <c>pnpm dsh web</c>.</summary>
     public const string DefaultBaseUrl = "http://127.0.0.1:3080";
 
+    /// <summary>Exception types that are expected when interacting with a Process object
+    /// (the process may have exited, been disposed, or the OS may reject the operation).</summary>
+    private static readonly Type[] _expectedProcessExceptions =
+    [
+        typeof(InvalidOperationException),
+        typeof(System.ComponentModel.Win32Exception),
+        typeof(NotSupportedException),
+        typeof(AggregateException),
+    ];
+
     private readonly string _baseUrl;
     private readonly TimeSpan _unaryTimeout;
 
@@ -187,8 +197,7 @@ public sealed class HarnessLauncher
         using var reg = ct.Register(() =>
         {
             try { KillProcessTree(process); }
-            catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception
-                                         or NotSupportedException or AggregateException)
+            catch (Exception ex) when (_expectedProcessExceptions.Contains(ex.GetType()))
             {
                 // Process already exited.
                 System.Diagnostics.Debug.WriteLine($"[HarnessLauncher] kill tree skipped: {ex.Message}");
@@ -208,8 +217,7 @@ public sealed class HarnessLauncher
     {
         if (process.HasExited) return;
         try { process.Kill(true); }
-        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception
-                                     or NotSupportedException or AggregateException)
+        catch (Exception ex) when (_expectedProcessExceptions.Contains(ex.GetType()))
         {
             // Access denied / already gone.
             System.Diagnostics.Debug.WriteLine($"[HarnessLauncher] kill skipped: {ex.Message}");
@@ -346,8 +354,7 @@ public sealed class HarnessLauncher
                 process.Kill(entireProcessTree: true);
             }
         }
-        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception
-                                     or NotSupportedException or AggregateException)
+        catch (Exception ex) when (_expectedProcessExceptions.Contains(ex.GetType()))
         {
             // Process already exited or access denied; the gateway check decides success.
             System.Diagnostics.Debug.WriteLine($"[HarnessLauncher] stop failed: {ex.Message}");
@@ -364,8 +371,7 @@ public sealed class HarnessLauncher
                 p.Kill(entireProcessTree: true);
             }
         }
-        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception
-                                     or NotSupportedException or AggregateException or ArgumentException)
+        catch (Exception ex) when (_expectedProcessExceptions.Contains(ex.GetType()) || ex is ArgumentException)
         {
             // Already gone or access denied. (ArgumentException: GetProcessById found no process.)
             System.Diagnostics.Debug.WriteLine($"[HarnessLauncher] kill pid failed: {ex.Message}");
@@ -406,8 +412,7 @@ public sealed class HarnessLauncher
                 }
             }
         }
-        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception
-                                     or NotSupportedException or ArgumentException or FormatException)
+        catch (Exception ex) when (_expectedProcessExceptions.Contains(ex.GetType()) || ex is ArgumentException or FormatException)
         {
             // netstat missing or parsing failed; report no listener.
             System.Diagnostics.Debug.WriteLine($"[HarnessLauncher] netstat probe failed: {ex.Message}");

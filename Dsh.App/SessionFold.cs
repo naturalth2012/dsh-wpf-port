@@ -10,7 +10,7 @@ namespace Dsh.App;
 /// client's shared fold. Handles token-level streaming (text/reasoning deltas), message
 /// finalization, and a tool-call tree keyed by <c>callId</c>.
 /// </summary>
-public sealed class SessionFold
+public sealed partial class SessionFold
 {
     private readonly StringBuilder _textBuffer = new();
     private readonly StringBuilder _reasoningBuffer = new();
@@ -78,71 +78,7 @@ public sealed class SessionFold
     /// </summary>
     public int DeliverablesVersion { get; private set; }
 
-    /// <summary>One produced-file fact: which seq produced it and at what path.</summary>
-    public sealed record DeliverableItem(long Seq, string Path);
-
-    /// <summary>
-    /// One step in the session trajectory (event ledger).
-    ///
-    /// Field set aligned with the native-web <c>ui-trajectory</c> contract so the WPF view can
-    /// render the same information (turn/request grouping, timing, error state, call pairing).
-    /// The four original positional parameters are kept first and the new ones are optional, so
-    /// existing call sites / tests constructing <c>new TrajectoryStep(i, kind, seq, time, text)</c>
-    /// keep compiling unchanged.
-    /// </summary>
-    /// <param name="Index">Monotonic position in event order (0-based).</param>
-    /// <param name="Kind">
-    /// Step type, matching the native kinds: <c>user</c>, <c>message</c> (assistant),
-    /// <c>tool</c>, <c>context</c> (injected input / config change), <c>compacted</c>,
-    /// <c>system</c>, <c>subtool</c>. <c>todo</c> is a WPF extension (todo/write snapshots).
-    /// Note the native product treats <c>turn</c> as a GROUPING level, not a step kind — turn
-    /// boundaries are carried by <see cref="TurnIndex"/> instead of emitting a step.
-    /// </param>
-    /// <param name="Seq">Originating event sequence number.</param>
-    /// <param name="Time">Originating event timestamp (host clock).</param>
-    /// <param name="Text">Short display summary (truncated — see MaxStepText).</param>
-    /// <param name="TurnIndex">1-based turn this step belongs to (native "Turn N" grouping).</param>
-    /// <param name="RequestIndex">1-based assistant request within the turn (native "Request #N").</param>
-    /// <param name="StartedAt">Actual start timestamp when known, else the event time.</param>
-    /// <param name="DurationMs">Wall-clock duration in ms when the payload reports one.</param>
-    /// <param name="IsError">True when the step represents a failure (e.g. a tool error result).</param>
-    /// <param name="CallId">Tool call id, used to pair a tool/call with its tool/result.</param>
-    /// <param name="Payload">
-    /// Detached copy of the originating event <c>data</c> object, kept so a details pane can show
-    /// the full payload/result on demand (the native ledger's Payload/Result tabs). It is stored
-    /// as a CLONED element (safe beyond the source JsonDocument's lifetime) and is null when the
-    /// payload was absent, too large (see MaxStepPayloadChars), or for high-frequency step kinds
-    /// where the detail value does not justify the copy — the truncated <see cref="Text"/> is
-    /// then the only content available.
-    /// </param>
-    /// <param name="InputTokens">Prompt tokens (native <c>input</c>).</param>
-    /// <param name="CacheReadTokens">Prompt tokens served from the provider cache (native <c>cacheRead</c>).</param>
-    /// <param name="CacheWriteTokens">Prompt tokens written into the provider cache (native <c>cacheWrite</c>).</param>
-    /// <param name="OutputTokens">Completion tokens (native <c>output</c>).</param>
-    /// <param name="ThinkTokens">Reasoning tokens (native <c>think</c>).</param>
-    /// <param name="TtftMs">
-    /// Time to first token, derived the same way the native product derives it
-    /// (firstTokenTime − stepStartTime) when the payload carries both, else null.
-    /// </param>
-    public sealed record TrajectoryStep(
-        int Index,
-        string Kind,
-        long Seq,
-        long Time,
-        string Text,
-        int? TurnIndex = null,
-        int? RequestIndex = null,
-        long? StartedAt = null,
-        long? DurationMs = null,
-        bool IsError = false,
-        string? CallId = null,
-        System.Text.Json.JsonElement? Payload = null,
-        long? InputTokens = null,
-        long? CacheReadTokens = null,
-        long? CacheWriteTokens = null,
-        long? OutputTokens = null,
-        long? ThinkTokens = null,
-        long? TtftMs = null);
+    // DeliverableItem, TrajectoryStep — extracted to SessionFold.DeliverableItem.cs / SessionFold.TrajectoryStep.cs
 
     /// <summary>Steps in event order, for the trajectory/replay view (P2-6).</summary>
     public IReadOnlyList<TrajectoryStep> Trajectory => _trajectory;
@@ -204,27 +140,7 @@ public sealed class SessionFold
     private int _currentTurnIndex;      // 0 until the first turn/start; 1-based once started.
     private int _currentRequestIndex;   // 0 until the first assistant request of the turn.
 
-    /// <summary>
-    /// Lightweight streaming telemetry (A2/A3 monitoring hook): counts chunks and cumulative
-    /// AppendChunk time so the UI can decide whether to enable the deferred optimizations
-    /// (A2 incremental-append for O(n²) text rebuilds; A3 frame-coalescing at high frequency).
-    /// A <see cref="System.Diagnostics.Stopwatch"/> is started/stopped around AppendChunk and
-    /// the deltas folded into <see cref="StreamingStats"/>.
-    /// </summary>
-    public sealed record StreamingStats
-    {
-        /// <summary>Chunks (text/reasoning deltas) folded since the last reset.</summary>
-        public long ChunkCount { get; init; }
-
-        /// <summary>Cumulative AppendChunk wall-clock time (µs) since the last reset.</summary>
-        public long AppendMicros { get; init; }
-
-        /// <summary>Peak Rows.Count observed since the last reset.</summary>
-        public int PeakRows { get; init; }
-
-        /// <summary>Average µs per chunk (0 when no chunks).</summary>
-        public double AvgAppendMicros => ChunkCount == 0 ? 0 : (double)AppendMicros / ChunkCount;
-    }
+    // StreamingStats — extracted to SessionFold.StreamingStats.cs
 
     private long _chunkCount;
     private long _appendMicros;
@@ -247,84 +163,7 @@ public sealed class SessionFold
         return stats;
     }
 
-    public sealed record Row(
-        string Role,
-        string Text,
-        string? Reasoning = null,
-        ToolCallNode? Tool = null,
-        string? MessageId = null,
-        long? Time = null);
-
-    /// <summary>A tool-call node in the tree; paired by <c>CallId</c> between call and result.</summary>
-    public sealed record ToolCallNode(
-        string CallId,
-        string Name,
-        string? Arguments,
-        string Status,
-        string? Output,
-        IReadOnlyList<ToolCallNode>? Children = null)
-    {
-        public ToolCallNode WithResult(string status, string? output) =>
-            this with { Status = status, Output = output };
-
-        /// <summary>
-        /// Output split into classified diff lines for the diff card (P0-3). Null when there is
-        /// no output. Each line is a <see cref="DiffLine"/> with a precomputed <c>Kind</c>
-        /// (add/remove/header/context) so the view can color it without a converter.
-        /// </summary>
-        public IReadOnlyList<DiffLine>? DiffLines
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(Output)) return null;
-                return Output.Split('\n').Select(DiffLine.FromText).ToArray();
-            }
-        }
-
-        /// <summary>
-        /// Build a recursive tool node from a model `tool-call` content block, mirroring
-        /// <c>ToolCallBlock</c>: a running call (callId/name/argsRaw) or a settled result
-        /// (kind 'tool-result', callId, isError, content), each owning <c>subCalls</c>.
-        /// </summary>
-        public static ToolCallNode FromBlock(JsonElement block)
-        {
-            string kind = block.TryGetProperty("kind", out var k) ? k.GetString() ?? "" : "";
-            string callId = block.TryGetProperty("callId", out var c) ? c.GetString() ?? "" : "";
-            string name = block.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "";
-            string args = block.TryGetProperty("argsRaw", out var a) && a.ValueKind == JsonValueKind.String
-                ? a.GetString() ?? ""
-                : "";
-
-            // Settled result: { kind:'tool-result', callId, call:{name}, isError, content, subCalls }.
-            bool isSettled = kind == "tool-result";
-            if (isSettled && string.IsNullOrEmpty(name))
-            {
-                name = block.TryGetProperty("call", out var call) && call.TryGetProperty("name", out var cn)
-                    ? cn.GetString() ?? ""
-                    : "";
-            }
-            string status = isSettled
-                ? (block.TryGetProperty("isError", out var ie) && ie.GetBoolean() ? "error" : "done")
-                : "running";
-            string? output = null;
-            if (isSettled && block.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.Array)
-            {
-                output = ExtractTextBlocks(content);
-            }
-
-            var children = new List<ToolCallNode>();
-            if (block.TryGetProperty("subCalls", out var subs) && subs.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var child in subs.EnumerateArray())
-                {
-                    children.Add(FromBlock(child));
-                }
-            }
-
-            return new ToolCallNode(callId, name, args, status, output,
-                children.Count == 0 ? null : children);
-        }
-    }
+    // Row, ToolCallNode, DiffLine — extracted to SessionFold.Row.cs / SessionFold.ToolCallNode.cs
 
     /// <summary>Fold one session event. Returns true if the surface changed.
     /// Per-event isolation: a malformed/unexpected payload MUST NOT abort the fold loop.
@@ -1561,26 +1400,5 @@ public sealed class SessionFold
             : $"{content}\n{Localization.Format("Fold.ContextInjectedSuffix", producer)}";
     }
 
-    /// <summary>
-    /// A single diff line with a precomputed classification for the diff tool card (P0-3):
-    /// <c>add</c> (leading "+"), <c>remove</c> (leading "-"), <c>header</c> ("@@" / "diff " /
-    /// "Index" / "+++" / "---"), else <c>context</c>.
-    /// </summary>
-    public sealed record DiffLine(string Text, string Kind)
-    {
-        public static DiffLine FromText(string line)
-        {
-            // Header markers must be checked before the single-char +/- (a "+++" or "---"
-            // line is a diff header, not an add/remove line).
-            string kind = line.StartsWith("@@") || line.StartsWith("diff ") ||
-                          line.StartsWith("Index") || line.StartsWith("+++") || line.StartsWith("---")
-                ? "header"
-                : line.StartsWith('+')
-                    ? "add"
-                    : line.StartsWith('-')
-                        ? "remove"
-                        : "context";
-            return new DiffLine(line, kind);
-        }
-    }
+    // DiffLine — extracted to SessionFold.ToolCallNode.cs
 }
