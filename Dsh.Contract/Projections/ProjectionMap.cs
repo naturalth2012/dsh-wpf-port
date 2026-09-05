@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Dsh.Contract.Projections;
 
 /// <summary>
@@ -19,12 +21,11 @@ public static class ProjectionKeys
     public const string ImageLimits = "imageLimits";
     public const string SessionListMetadata = "sessionListMetadata";
 
-    /// <summary>All 11 projection keys, in declaration order.</summary>
-    public static readonly string[] All =
-    {
+    /// <summary>All 11 projection keys, in declaration order. Immutable: a mutable
+    /// <c>string[]</c> let any consumer overwrite entries and corrupt the process-wide registry.</summary>
+    public static readonly ImmutableArray<string> All = ImmutableArray.Create(
         Title, SessionStats, Plan, Permissions, Goal, Todos,
-        TokenUsage, ContextPressure, ContextBreakdown, ImageLimits, SessionListMetadata,
-    };
+        TokenUsage, ContextPressure, ContextBreakdown, ImageLimits, SessionListMetadata);
 }
 
 /// <summary>Plan collaboration state (plan-mode): active is the logged state in force.</summary>

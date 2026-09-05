@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Dsh.Contract.Methods;
 
 /// <summary>
@@ -85,9 +87,9 @@ public static class RpcMethods
     public const string MessageFeedbackPut = "messageFeedback.put";
     public const string MessageFeedbackDelete = "messageFeedback.delete";
 
-    /// <summary>All 55 client-request method keys, in declaration order.</summary>
-    public static readonly string[] All =
-    {
+    /// <summary>All 55 client-request method keys, in declaration order. Immutable: a mutable
+    /// <c>string[]</c> let any consumer overwrite entries and corrupt the process-wide registry.</summary>
+    public static readonly ImmutableArray<string> All = ImmutableArray.Create(
         SessionList, SessionSearch, SessionCreate, SessionHistory, SessionModels,
         SessionSelectModel, SessionRename, SessionFork, SessionPrompt, SessionAttachment,
         SessionUpdateQueue, SessionCancel,
@@ -102,6 +104,5 @@ public static class RpcMethods
         SettingsDescribe, SettingsOpenDocument, SettingsUpdate, SettingsReplace, SettingsMutate,
         CredentialsDescribe, CredentialsSet, CredentialsUnset,
         LlmProviders, LlmModels, LlmDiscoverModels,
-        MessageFeedbackList, MessageFeedbackPut, MessageFeedbackDelete,
-    };
+        MessageFeedbackList, MessageFeedbackPut, MessageFeedbackDelete);
 }

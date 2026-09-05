@@ -18,7 +18,10 @@ public sealed record QueuedInboxItem
     [JsonPropertyName("message")]
     public JsonElement? Message { get; init; }
 
-    /// <summary>Short human text for a queue row (from message.content text part if present).</summary>
+    /// <summary>Short human text for a queue row (from message.content text part if present).
+    /// Computed view helper, not a wire field — [JsonIgnore] keeps it out of request/response
+    /// serialization (a stray get-only property would otherwise leak onto the wire as noise).</summary>
+    [JsonIgnore]
     public string TextPreview
     {
         get

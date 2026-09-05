@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Dsh.Contract.Frames;
 
 /// <summary>
@@ -8,22 +10,19 @@ namespace Dsh.Contract.Frames;
 /// </summary>
 public static class FrameRegistry
 {
-    /// <summary>All mux-stream frame type literals, in declaration order.</summary>
-    public static readonly string[] MuxTypes =
-    {
+    /// <summary>All mux-stream frame type literals, in declaration order. Immutable: a mutable
+    /// <c>string[]</c> let any consumer overwrite entries and corrupt the process-wide registry.</summary>
+    public static readonly ImmutableArray<string> MuxTypes = ImmutableArray.Create(
         "session/event", "session/subscribed", "approval/requested", "approval/resolved",
         "question/requested", "question/resolved", "session/queue", "session/jobs",
-        "session/projection", "stream/error",
-    };
+        "session/projection", "stream/error");
 
-    /// <summary>All host-stream frame type literals, in declaration order.</summary>
-    public static readonly string[] HostTypes =
-    {
+    /// <summary>All host-stream frame type literals, in declaration order. Immutable (see <see cref="MuxTypes"/>).</summary>
+    public static readonly ImmutableArray<string> HostTypes = ImmutableArray.Create(
         "host/session-added", "host/session-removed", "host/session-status",
         "host/agent-error", "host/workspace-changed", "host/workspace-removed",
         "host/workspace-order-changed", "host/archived-sessions-changed",
-        "host/remote-event", "stream/error",
-    };
+        "host/remote-event", "stream/error");
 
     /// <summary>Resolve a mux frame type literal to its CLR body type; null if unknown.</summary>
     public static Type? MuxBodyType(string type) => type switch

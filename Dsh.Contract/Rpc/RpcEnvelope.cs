@@ -28,7 +28,22 @@ public enum RpcMessageType
 /// </summary>
 public sealed class RpcMessageTypeJsonConverter : JsonConverter<RpcMessageType>
 {
-    private static readonly Dictionary<string, RpcMessageType> _byWire = BuildIndex();
+    // One index build feeds both directions (see RpcErrorCodeJsonConverter for rationale:
+    // cached reverse map instead of per-Write reflection, symmetric with Read).
+    private static readonly Dictionary<string, RpcMessageType> _byWire = new(StringComparer.Ordinal);
+    private static readonly Dictionary<RpcMessageType, string> _toWire = new();
+
+    static RpcMessageTypeJsonConverter()
+    {
+        foreach (var field in typeof(RpcMessageType).GetFields(BindingFlags.Public | BindingFlags.Static))
+        {
+            var attr = field.GetCustomAttribute<JsonPropertyNameAttribute>()
+                ?? throw new InvalidOperationException($"RpcMessageType.{field.Name} missing [JsonPropertyName].");
+            var value = (RpcMessageType)field.GetValue(null)!;
+            _byWire[attr.Name] = value;
+            _toWire[value] = attr.Name;
+        }
+    }
 
     public override RpcMessageType Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -39,21 +54,11 @@ public sealed class RpcMessageTypeJsonConverter : JsonConverter<RpcMessageType>
 
     public override void Write(Utf8JsonWriter writer, RpcMessageType value, JsonSerializerOptions options)
     {
-        var name = value.GetType().GetField(value.ToString())!
-            .GetCustomAttribute<JsonPropertyNameAttribute>()!.Name;
-        writer.WriteStringValue(name);
-    }
-
-    private static Dictionary<string, RpcMessageType> BuildIndex()
-    {
-        var map = new Dictionary<string, RpcMessageType>(StringComparer.Ordinal);
-        foreach (var field in typeof(RpcMessageType).GetFields(BindingFlags.Public | BindingFlags.Static))
+        if (!_toWire.TryGetValue(value, out var name))
         {
-            var attr = field.GetCustomAttribute<JsonPropertyNameAttribute>()
-                ?? throw new InvalidOperationException($"RpcMessageType.{field.Name} missing [JsonPropertyName].");
-            map[attr.Name] = (RpcMessageType)field.GetValue(null)!;
+            throw new InvalidOperationException($"RpcMessageType.{value} has no [JsonPropertyName] mapping.");
         }
-        return map;
+        writer.WriteStringValue(name);
     }
 }
 

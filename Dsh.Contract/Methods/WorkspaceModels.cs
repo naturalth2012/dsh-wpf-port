@@ -34,13 +34,6 @@ public sealed record WorkspaceListResponse
     public string[] ArchivedSessionIds { get; init; } = [];
 }
 
-/// <summary>Value of <c>workspace.create</c>, mirroring <c>workspaceCreateValueSchema</c>.</summary>
-public sealed record WorkspaceCreated
-{
-    [JsonPropertyName("workspace")]
-    public required WorkspaceView Workspace { get; init; }
-}
-
 /// <summary>Alias of the full <c>workspace.create</c> value slot: the adopted workspace view
 /// plus whether a new registry entry was created (vs. adopting an already-registered path).</summary>
 public sealed record WorkspaceCreateResult

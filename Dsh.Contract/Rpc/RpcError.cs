@@ -63,7 +63,23 @@ public enum RpcErrorCode
 /// </summary>
 public sealed class RpcErrorCodeJsonConverter : JsonConverter<RpcErrorCode>
 {
-    private static readonly Dictionary<string, RpcErrorCode> _byWire = BuildIndex();
+    // One index build feeds both directions: wire→enum (Read) and enum→wire (Write). The old
+    // Write path did GetField+GetCustomAttribute reflection (plus enum boxing via GetType())
+    // on every serialization — asymmetric with Read's cached lookup and NativeAOT-hostile.
+    private static readonly Dictionary<string, RpcErrorCode> _byWire = new(StringComparer.Ordinal);
+    private static readonly Dictionary<RpcErrorCode, string> _toWire = new();
+
+    static RpcErrorCodeJsonConverter()
+    {
+        foreach (var field in typeof(RpcErrorCode).GetFields(BindingFlags.Public | BindingFlags.Static))
+        {
+            var attr = field.GetCustomAttribute<JsonPropertyNameAttribute>()
+                ?? throw new InvalidOperationException($"RpcErrorCode.{field.Name} missing [JsonPropertyName].");
+            var value = (RpcErrorCode)field.GetValue(null)!;
+            _byWire[attr.Name] = value;
+            _toWire[value] = attr.Name;
+        }
+    }
 
     public override RpcErrorCode Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
@@ -74,21 +90,11 @@ public sealed class RpcErrorCodeJsonConverter : JsonConverter<RpcErrorCode>
 
     public override void Write(Utf8JsonWriter writer, RpcErrorCode value, JsonSerializerOptions options)
     {
-        var name = value.GetType().GetField(value.ToString())!
-            .GetCustomAttribute<JsonPropertyNameAttribute>()!.Name;
-        writer.WriteStringValue(name);
-    }
-
-    private static Dictionary<string, RpcErrorCode> BuildIndex()
-    {
-        var map = new Dictionary<string, RpcErrorCode>(StringComparer.Ordinal);
-        foreach (var field in typeof(RpcErrorCode).GetFields(BindingFlags.Public | BindingFlags.Static))
+        if (!_toWire.TryGetValue(value, out var name))
         {
-            var attr = field.GetCustomAttribute<JsonPropertyNameAttribute>()
-                ?? throw new InvalidOperationException($"RpcErrorCode.{field.Name} missing [JsonPropertyName].");
-            map[attr.Name] = (RpcErrorCode)field.GetValue(null)!;
+            throw new InvalidOperationException($"RpcErrorCode.{value} has no [JsonPropertyName] mapping.");
         }
-        return map;
+        writer.WriteStringValue(name);
     }
 }
 
