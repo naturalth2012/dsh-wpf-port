@@ -42,16 +42,16 @@ public class MuxFrameWireTests
         // Minimal valid payload for each type; only the routing + fixed fields matter here.
         var json = type switch
         {
-            "session/event" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"event\":{{\"type\":\"user/message\"}}}}",
-            "session/subscribed" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"lastSeq\":42}}",
-            "approval/requested" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"approvalId\":\"a1\",\"toolName\":\"bash\"}}",
-            "approval/resolved" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"approvalId\":\"a1\",\"outcome\":\"approved\"}}",
-            "question/requested" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"questions\":[{{\"id\":\"q1\",\"question\":\"pick one\"}}]}}",
-            "question/resolved" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"questionRpcId\":\"q1\",\"outcome\":\"answered\"}}",
-            "session/queue" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"items\":[]}}",
-            "session/jobs" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"jobs\":[]}}",
-            "session/projection" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"key\":\"title\",\"seq\":5}}",
-            "stream/error" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"error\":{{\"code\":\"bad-request\",\"message\":\"x\"}}}}",
+            "session/event" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"event\":{{\"type\":\"user/message\"}}}}",
+            "session/subscribed" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"lastSeq\":42}}",
+            "approval/requested" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"approvalId\":\"a1\",\"toolName\":\"bash\"}}",
+            "approval/resolved" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"approvalId\":\"a1\",\"outcome\":\"approved\"}}",
+            "question/requested" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"questions\":[{{\"id\":\"q1\",\"question\":\"pick one\"}}]}}",
+            "question/resolved" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"questionRpcId\":\"q1\",\"outcome\":\"answered\"}}",
+            "session/queue" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"items\":[]}}",
+            "session/jobs" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"jobs\":[]}}",
+            "session/projection" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"key\":\"title\",\"seq\":5}}",
+            "stream/error" => $"{{\"type\":\"{type}\",\"error\":{{\"code\":\"bad-request\",\"message\":\"x\"}}}}",
             _ => throw new ArgumentOutOfRangeException(nameof(type)),
         };
 
@@ -59,14 +59,19 @@ public class MuxFrameWireTests
 
         Assert.NotNull(frame);
         Assert.Equal(expected, frame.GetType());
-        Assert.Equal(RpcId.Of("r1"), frame.RpcId);
+        // Real wire payloads do NOT embed rpcId — the host carries it only on the enclosing
+        // server-request envelope, and the client backfills it (DownstreamStreams.BackfillRpcId,
+        // covered in Dsh.Client.Tests). Fixtures used to embed "rpcId":"r1" here, a shape the
+        // host never sends, which is exactly what let the HostFrame `required RpcId` drift pass
+        // every test while the production host stream ran deaf.
+        Assert.Null(frame.RpcId);
     }
 
     [Fact]
     public void SessionEventFrame_binds_sessionId_and_event_payload()
     {
         const string json =
-            "{\"type\":\"session/event\",\"rpcId\":\"r1\",\"sessionId\":\"sess-abc\"," +
+            "{\"type\":\"session/event\",\"sessionId\":\"sess-abc\"," +
             "\"event\":{\"type\":\"assistant/chunk\",\"seq\":3,\"time\":123,\"data\":{\"chunk\":{\"type\":\"text-delta\",\"text\":\"hi\"}}}}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as SessionEventFrame;
@@ -83,7 +88,7 @@ public class MuxFrameWireTests
     public void SessionSubscribedFrame_binds_lastSeq()
     {
         const string json =
-            "{\"type\":\"session/subscribed\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"lastSeq\":17}";
+            "{\"type\":\"session/subscribed\",\"sessionId\":\"s1\",\"lastSeq\":17}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as SessionSubscribedFrame;
 
@@ -96,7 +101,7 @@ public class MuxFrameWireTests
     public void ApprovalRequestedFrame_binds_all_fixed_fields()
     {
         const string json =
-            "{\"type\":\"approval/requested\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"," +
+            "{\"type\":\"approval/requested\",\"sessionId\":\"s1\"," +
             "\"approvalId\":\"a1\",\"toolName\":\"bash\",\"callId\":\"c1\",\"reason\":\"needs sudo\"}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as ApprovalRequestedFrame;
@@ -112,7 +117,7 @@ public class MuxFrameWireTests
     public void QuestionRequestedFrame_binds_questions_array()
     {
         const string json =
-            "{\"type\":\"question/requested\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"," +
+            "{\"type\":\"question/requested\",\"sessionId\":\"s1\"," +
             "\"questions\":[{\"id\":\"q1\",\"question\":\"pick one\"},{\"id\":\"q2\",\"question\":\"pick two\"}]}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as QuestionRequestedFrame;
@@ -130,7 +135,7 @@ public class MuxFrameWireTests
         // surface as a hard deserialization failure (not a silently-defaulted item), so the GUI
         // never renders an unanswerable blank question card.
         const string json =
-            "{\"type\":\"question/requested\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"," +
+            "{\"type\":\"question/requested\",\"sessionId\":\"s1\"," +
             "\"questions\":[{\"id\":\"q1\"}]}";
 
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<MuxFrame>(json, Options));
@@ -140,7 +145,7 @@ public class MuxFrameWireTests
     public void SessionQueueFrame_binds_items_snapshot()
     {
         const string json =
-            "{\"type\":\"session/queue\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"," +
+            "{\"type\":\"session/queue\",\"sessionId\":\"s1\"," +
             "\"items\":[{\"id\":\"i1\",\"placement\":\"head\",\"message\":\"m1\"}]}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as SessionQueueFrame;
@@ -158,7 +163,7 @@ public class MuxFrameWireTests
     public void SessionProjectionFrame_binds_key_and_seq()
     {
         const string json =
-            "{\"type\":\"session/projection\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"," +
+            "{\"type\":\"session/projection\",\"sessionId\":\"s1\"," +
             "\"key\":\"title\",\"seq\":9}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as SessionProjectionFrame;
@@ -173,7 +178,7 @@ public class MuxFrameWireTests
     public void SessionProjectionFrame_binds_value_payload()
     {
         const string json =
-            "{\"type\":\"session/projection\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"," +
+            "{\"type\":\"session/projection\",\"sessionId\":\"s1\"," +
             "\"key\":\"title\",\"seq\":9,\"value\":\"My Run\"}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as SessionProjectionFrame;
@@ -186,7 +191,7 @@ public class MuxFrameWireTests
     public void StreamErrorFrame_binds_error_code()
     {
         const string json =
-            "{\"type\":\"stream/error\",\"rpcId\":\"r1\"," +
+            "{\"type\":\"stream/error\"," +
             "\"error\":{\"code\":\"bad-request\",\"message\":\"invalid frame\"}}";
 
         var frame = JsonSerializer.Deserialize<MuxFrame>(json, Options) as StreamErrorFrame;
@@ -237,16 +242,16 @@ public class MuxFrameWireTests
     {
         var json = type switch
         {
-            "host/session-added" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"blank\":true}}",
-            "host/session-removed" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"}}",
-            "host/session-status" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"running\":true}}",
-            "host/agent-error" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"message\":\"boom\"}}",
-            "host/workspace-changed" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"workspace\":{{\"workspaceId\":\"w1\"}}}}",
-            "host/workspace-removed" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"workspaceId\":\"w1\"}}",
-            "host/workspace-order-changed" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"workspaceIds\":[\"w1\",\"w2\"]}}",
-            "host/archived-sessions-changed" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"archivedSessionIds\":[\"s9\"]}}",
-            "host/remote-event" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"event\":\"did-x\",\"args\":[1,\"a\"]}}",
-            "stream/error" => $"{{\"type\":\"{type}\",\"rpcId\":\"r1\",\"error\":{{\"code\":\"internal\",\"message\":\"x\"}}}}",
+            "host/session-added" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"blank\":true}}",
+            "host/session-removed" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\"}}",
+            "host/session-status" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"running\":true}}",
+            "host/agent-error" => $"{{\"type\":\"{type}\",\"sessionId\":\"s1\",\"message\":\"boom\"}}",
+            "host/workspace-changed" => $"{{\"type\":\"{type}\",\"workspace\":{{\"workspaceId\":\"w1\"}}}}",
+            "host/workspace-removed" => $"{{\"type\":\"{type}\",\"workspaceId\":\"w1\"}}",
+            "host/workspace-order-changed" => $"{{\"type\":\"{type}\",\"workspaceIds\":[\"w1\",\"w2\"]}}",
+            "host/archived-sessions-changed" => $"{{\"type\":\"{type}\",\"archivedSessionIds\":[\"s9\"]}}",
+            "host/remote-event" => $"{{\"type\":\"{type}\",\"event\":\"did-x\",\"args\":[1,\"a\"]}}",
+            "stream/error" => $"{{\"type\":\"{type}\",\"error\":{{\"code\":\"internal\",\"message\":\"x\"}}}}",
             _ => throw new ArgumentOutOfRangeException(nameof(type)),
         };
 
@@ -260,7 +265,7 @@ public class MuxFrameWireTests
     public void HostSessionAddedFrame_binds_lineage_fields()
     {
         const string json =
-            "{\"type\":\"host/session-added\",\"rpcId\":\"r1\",\"sessionId\":\"s1\"," +
+            "{\"type\":\"host/session-added\",\"sessionId\":\"s1\"," +
             "\"blank\":true,\"parentSessionId\":\"p1\",\"origin\":\"fork\",\"cwd\":\"D:\\\\x\"," +
             "\"agentPreset\":\"general\"}";
 
@@ -277,7 +282,7 @@ public class MuxFrameWireTests
     [Fact]
     public void HostSessionStatusFrame_binds_running_flag()
     {
-        const string json = "{\"type\":\"host/session-status\",\"rpcId\":\"r1\",\"sessionId\":\"s1\",\"running\":false}";
+        const string json = "{\"type\":\"host/session-status\",\"sessionId\":\"s1\",\"running\":false}";
 
         var frame = JsonSerializer.Deserialize<HostFrame>(json, Options) as HostSessionStatusFrame;
 
@@ -289,7 +294,7 @@ public class MuxFrameWireTests
     public void HostStreamErrorFrame_binds_error_code()
     {
         const string json =
-            "{\"type\":\"stream/error\",\"rpcId\":\"r1\"," +
+            "{\"type\":\"stream/error\"," +
             "\"error\":{\"code\":\"internal\",\"message\":\"closed\"}}";
 
         var frame = JsonSerializer.Deserialize<HostFrame>(json, Options) as HostStreamErrorFrame;
