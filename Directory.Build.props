@@ -1,0 +1,10 @@
+<Project>
+
+  <!-- Repo-wide build defaults; any per-csproj setting overrides these. -->
+  <PropertyGroup>
+    <!-- On CI, warnings are errors: keeps the analyzer baseline from rotting between local
+         builds (which stay lenient) and the pipeline. Set the CI env var in the pipeline. -->
+    <TreatWarningsAsErrors Condition="'$(CI)' == 'true'">true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

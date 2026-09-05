@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <!-- M0：Markdown 解析引擎（纯解析、无 UI 依赖，兼容 net8.0） -->
-    <PackageReference Include="Markdig" Version="0.37.0" />
+    <PackageReference Include="Markdig" />
   </ItemGroup>
 
   <PropertyGroup>

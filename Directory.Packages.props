@@ -1,0 +1,26 @@
+<Project>
+
+  <!-- Central package version management: one place to bump a dependency for every project.
+       csproj files reference packages WITHOUT Version attributes; add new entries here
+       (never re-add per-project Version attributes; VersionOverride only as a deliberate,
+       temporary exception). -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageVersion Include="Markdig" Version="0.37.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.3405.78" />
+    <PackageVersion Include="ZstdNet" Version="1.5.7" />
+
+    <!-- Test stack (all *.Tests projects) -->
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+</Project>

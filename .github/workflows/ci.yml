@@ -36,5 +36,6 @@ jobs:
     - name: Test
       run: |
         dotnet test Dsh.Contract.Tests/Dsh.Contract.Tests.csproj --configuration Release --no-build --verbosity normal
-        dotnet test Dsh.App.Tests/Dsh.App.Tests.csproj        --configuration Release --no-build --verbosity normal
-        dotnet test Dsh.Viewer.Tests/Dsh.Viewer.Tests.csproj  --configuration Release --no-build --verbosity normal
+        dotnet test Dsh.Client.Tests/Dsh.Client.Tests.csproj   --configuration Release --no-build --verbosity normal
+        dotnet test Dsh.App.Tests/Dsh.App.Tests.csproj          --configuration Release --no-build --verbosity normal
+        dotnet test Dsh.Viewer.Tests/Dsh.Viewer.Tests.csproj    --configuration Release --no-build --verbosity normal

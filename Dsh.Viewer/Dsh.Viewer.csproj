@@ -5,8 +5,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="ZstdNet" Version="1.5.7" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="ZstdNet" />
   </ItemGroup>
 
   <PropertyGroup>

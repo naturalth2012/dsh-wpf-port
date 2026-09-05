@@ -5,7 +5,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test seam: DownstreamStreams.TryParseFrame / BackfillRpcId are internal on purpose
+         (wire-protocol details); the transport tests exercise them directly. -->
+    <InternalsVisibleTo Include="Dsh.Client.Tests" />
   </ItemGroup>
 
   <PropertyGroup>
