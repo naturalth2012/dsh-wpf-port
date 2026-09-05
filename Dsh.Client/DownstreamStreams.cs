@@ -87,21 +87,48 @@ public static class DownstreamStreams
             while (!result.EndOfMessage);
 
             string text = Encoding.UTF8.GetString(message.ToArray());
-            if (TryParseFrame<TFrame>(text, out var rpcId, out var frame))
+            if (TryParseFrame<TFrame>(text, log, out var rpcId, out var frame))
             {
-                // The host carries rpcId only on the envelope, not inside the frame payload.
-                // Backfill it so answerable frames (approval/question) can echo it on response.
-                if (frame is Dsh.Contract.Frames.MuxFrame mf && mf.RpcId is null)
-                {
-                    mf.RpcId = rpcId;
-                }
+                BackfillRpcId(frame, rpcId);
                 yield return (rpcId, frame);
             }
         }
     }
 
-    private static bool TryParseFrame<TFrame>(
+    /// <summary>
+    /// Backfill the envelope's rpcId onto the parsed frame. The host carries rpcId only on the
+    /// enclosing server-request envelope, never inside the frame payload, so BOTH frame
+    /// hierarchies (<see cref="MuxFrame"/> and <see cref="HostFrame"/>) model it as an optional
+    /// settable property that this reader fills in after parsing.
+    ///
+    /// Regression note (2026-09-05): the host hierarchy previously modeled RpcId as `required`,
+    /// so every real host-frame payload (which never embeds rpcId) failed STJ validation, was
+    /// swallowed by the corrupt-frame catch, and the entire host stream ran deaf — while all
+    /// wire tests stayed green because their fixtures wrongly embedded rpcId in the payload.
+    /// </summary>
+    internal static void BackfillRpcId(object frame, RpcId rpcId)
+    {
+        switch (frame)
+        {
+            case MuxFrame { RpcId: null } mux:
+                mux.RpcId = rpcId;
+                break;
+            case HostFrame { RpcId: null } host:
+                host.RpcId = rpcId;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Parse one WS text message as a server-request envelope
+    /// (<c>{ type:'server-request', rpcId, method, payload }</c>) and deserialize the payload
+    /// slot into <typeparamref name="TFrame"/>. Malformed or foreign messages return false —
+    /// one bad frame must not kill the stream — but every drop is logged with a reason and a
+    /// process-lifetime counter, so a contract drift can never deafen a stream silently again.
+    /// </summary>
+    internal static bool TryParseFrame<TFrame>(
         string text,
+        ILogger log,
         out RpcId rpcId,
         out TFrame frame)
         where TFrame : class
@@ -114,22 +141,55 @@ public static class DownstreamStreams
             using var doc = JsonDocument.Parse(text);
             var root = doc.RootElement;
 
-            // Envelope: { type:"server-request", rpcId, method, payload }
-            string type = root.GetProperty("type").GetString() ?? "";
-            if (type != "server-request") return false;
+            // Envelope: { type:"server-request", rpcId, method, payload }. Missing slots go
+            // through the logged drop path (TryGetProperty) instead of throwing
+            // KeyNotFoundException, which previously escaped the JsonException-only catch and
+            // could kill the whole receive loop.
+            if (!root.TryGetProperty("type", out var typeEl) ||
+                typeEl.GetString() != "server-request")
+            {
+                DropFrame(log, text, "not a server-request envelope");
+                return false;
+            }
 
-            rpcId = RpcId.Of(root.GetProperty("rpcId").GetString() ?? "");
-            var payload = root.GetProperty("payload");
+            if (!root.TryGetProperty("rpcId", out var rpcIdEl) ||
+                rpcIdEl.GetString() is not { Length: > 0 } rpcIdText)
+            {
+                DropFrame(log, text, "envelope missing rpcId");
+                return false;
+            }
+
+            if (!root.TryGetProperty("payload", out var payload))
+            {
+                DropFrame(log, text, "envelope missing payload");
+                return false;
+            }
+
+            rpcId = RpcId.Of(rpcIdText);
 
             var parsed = JsonSerializer.Deserialize<TFrame>(payload.GetRawText(), JsonEnvelopeCodec.Options);
-            if (parsed is null) return false;
+            if (parsed is null)
+            {
+                DropFrame(log, text, "payload deserialized to null");
+                return false;
+            }
             frame = parsed;
             return true;
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            // One corrupt frame must not kill the stream.
+            DropFrame(log, text, $"JSON parse failed: {ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>Cumulative count of frames dropped as unparseable (diagnostic counter).</summary>
+    private static long _droppedFrames;
+
+    private static void DropFrame(ILogger log, string text, string reason)
+    {
+        long count = Interlocked.Increment(ref _droppedFrames);
+        string head = text.Length <= 200 ? text : text[..200];
+        log.LogWarning("[Stream] dropped frame #{Count} ({Reason}): {Head}", count, reason, head);
     }
 }

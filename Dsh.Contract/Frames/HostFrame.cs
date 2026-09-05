@@ -21,8 +21,10 @@ namespace Dsh.Contract.Frames;
 [JsonDerivedType(typeof(HostStreamErrorFrame), "stream/error")]
 public abstract record HostFrame
 {
-    /// <summary>Correlation id minted by the host for this push.</summary>
-    public required RpcId RpcId { get; init; }
+    /// <summary>Correlation id minted by the host for this push (echo on answerable frames).
+    /// The host carries <c>rpcId</c> only on the enclosing server-request envelope, NOT inside the
+    /// frame payload, so this is optional here and backfilled from the envelope by the client.</summary>
+    public RpcId? RpcId { get; set; }
 }
 
 /// <summary>A session was created; carries lineage anchor, origin, cwd, and blank bit.</summary>
