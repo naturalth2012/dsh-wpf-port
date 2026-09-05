@@ -108,7 +108,19 @@ public sealed class ConnectionScope : IDisposable
             if (!_started)
             {
                 _started = true;
-                _ = Task.Run(() => RunLoopAsync());
+                // Create the CTS while holding the gate. RunLoopAsync previously assigned
+                // _streamCts on its own (unsynchronized) schedule, so a fast Attach→Detach pair
+                // could cancel a not-yet-created source (a no-op) and then leak the loop that
+                // minted its own token afterwards — nobody could ever cancel it.
+                _streamCts = new CancellationTokenSource();
+                var ct = _streamCts.Token;
+                var loop = Task.Run(() => RunLoopAsync(ct));
+                // B3-style observation: the loop's own catch-alls make faults unlikely, but a
+                // bug before the first try (e.g. null _baseUrl) must not die as an unobserved
+                // task exception.
+                _ = loop.ContinueWith(
+                    t => Log.Warn($"[Stream] RunLoop faulted: {t.Exception?.GetBaseException().Message}"),
+                    TaskContinuationOptions.OnlyOnFaulted);
             }
             return true;
         }
@@ -178,11 +190,9 @@ public sealed class ConnectionScope : IDisposable
     }
 
     /// <summary>The stream receive loop with reconnect backoff; runs on a background thread.</summary>
-    private async Task RunLoopAsync()
+    private async Task RunLoopAsync(CancellationToken ct)
     {
         string baseUrl = _baseUrl!;
-        _streamCts = new CancellationTokenSource();
-        var ct = _streamCts.Token;
         _reconnect.Reset();
 
         while (!ct.IsCancellationRequested)
@@ -201,9 +211,6 @@ public sealed class ConnectionScope : IDisposable
                 // already handles the reconnect, so swallowing here is safe.
                 var other = ReferenceEquals(completed, muxTask) ? hostTask : muxTask;
                 _ = other.ContinueWith(t => { _ = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
-                _streamCts?.Cancel();
-                _streamCts = new CancellationTokenSource();
-                ct = _streamCts.Token;
             }
             catch (OperationCanceledException)
             {
@@ -211,8 +218,17 @@ public sealed class ConnectionScope : IDisposable
             }
             catch
             {
-                // One stream failed; fall through to reconnect.
+                // One stream faulted (e.g. WS connect refused). Fall through: the CTS rotation
+                // below also cancels the still-open sibling so the retry never stacks a second
+                // socket pair on top of a live one (the old code only rotated on the clean-exit
+                // path, leaking the sibling's socket until the host closed it).
             }
+
+            // Rotate the CTS — cancel whatever receive loop is still alive, mint a fresh token
+            // for the next attempt — atomically with StopStreams (see RotateCts). Returning
+            // false means: external stop won the race, or the last subscriber detached
+            // mid-flight — either way the loop must not resurrect itself.
+            if (!RotateCts(ref ct)) return;
 
             if (ct.IsCancellationRequested) return;
             var delay = _reconnect.NextDelay();
@@ -236,6 +252,26 @@ public sealed class ConnectionScope : IDisposable
             {
                 // Handshake failed; the outer loop backs off and retries.
             }
+        }
+    }
+
+    /// <summary>
+    /// Swap the stream CTS under the gate: cancel the current token (closing whichever receive
+    /// loop is still alive) and mint a fresh one for the next connect attempt. The swap must be
+    /// atomic with <see cref="StopStreams"/>'s read — the previous unsynchronized
+    /// cancel-then-replace raced a concurrent Detach (which cancelled and nulled the source
+    /// between the two writes), leaving a live loop holding a token nobody could cancel.
+    /// </summary>
+    private bool RotateCts(ref CancellationToken ct)
+    {
+        lock (_gate)
+        {
+            if (ct.IsCancellationRequested) return false;
+            if (_subscriberCount == 0) return false;
+            _streamCts?.Cancel();
+            _streamCts = new CancellationTokenSource();
+            ct = _streamCts.Token;
+            return true;
         }
     }
 
@@ -285,14 +321,28 @@ public sealed class ConnectionScope : IDisposable
     {
         try
         {
+            Log.Info($"[Stream] ReadHostLoop start (gen={generation}, url={baseUrl})");
+            bool first = true;
             await foreach (var (_, frame) in DownstreamStreams.ReadHost(baseUrl, Logging.Get<ConnectionScope>(), ct))
             {
+                if (first)
+                {
+                    Log.Info($"[Stream] ReadHostLoop first frame arrived kind={frame?.GetType().Name}");
+                    first = false;
+                }
                 if (generation != Client.Generation.Current) return;
+                if (frame is null) continue;
                 _ = Application.Current.Dispatcher.BeginInvoke(new Action(() => HostFrameReceived?.Invoke(frame)));
             }
+            Log.Info("[Stream] ReadHostLoop ended (stream closed by host)");
         }
         catch (OperationCanceledException) { }
-        catch (Exception) { }
+        catch (Exception ex)
+        {
+            // Was a bare `catch (Exception) {}` — a total swallow that hid host-stream failures
+            // (the mux loop logs its equivalent). Kept non-fatal: the reconnect loop owns retry.
+            Log.Warn($"[Stream] ReadHostLoop failed: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     /// <summary>Shared client URL is settable before the first window attaches.</summary>
